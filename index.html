@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manju - AI漫剧创作平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg-primary:#0f0f14;--bg-secondary:#1a1a24;--bg-surface:#22222e;
+--bg-hover:#2a2a38;--text-primary:#e8e8f0;--text-secondary:#8888a0;
+--text-muted:#555570;--accent:#7c3aed;--accent-hover:#6d28d9;
+--accent-light:#a78bfa;--success:#10b981;--warning:#f59e0b;
+--error:#ef4444;--border:#2a2a3e;--sidebar-w:240px;
+--radius:8px;--radius-lg:12px;--transition:0.2s ease;
+}
+html{font-size:14px}
+body{font-family:'Noto Sans SC','Outfit',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;overflow:hidden}
+h1,h2,h3,h4,h5,h6,.font-display{font-family:'Outfit','Noto Sans SC',sans-serif}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg-hover);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+input,textarea,select,button{font-family:inherit;font-size:inherit}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:100;transition:transform .3s ease}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.sidebar-logo h1{font-size:1.6rem;font-weight:800;color:var(--accent-light);letter-spacing:-0.5px}
+.sidebar-logo p{font-size:.75rem;color:var(--text-muted);margin-top:2px;letter-spacing:1px}
+.sidebar-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius);cursor:pointer;color:var(--text-secondary);transition:all var(--transition);font-size:.9rem;user-select:none;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary)}
+.nav-item.active{background:rgba(124,58,237,.15);color:var(--accent-light)}
+.nav-item .nav-icon{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:.7rem;color:var(--text-muted)}
+
+/* ===== MAIN ===== */
+.main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow-y:auto;overflow-x:hidden}
+.view{display:none;padding:32px 40px;max-width:1200px;animation:fadeIn .3s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.view-header{margin-bottom:28px}
+.view-header h2{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.view-header p{color:var(--text-secondary);font-size:.85rem}
+
+/* ===== STEP INDICATOR ===== */
+.step-indicator{display:flex;align-items:center;gap:0;margin-bottom:32px;padding:16px 20px;background:var(--bg-secondary);border-radius:var(--radius-lg);border:1px solid var(--border)}
+.step-dot{display:flex;align-items:center;gap:0;cursor:pointer}
+.step-dot .dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;border:2px solid var(--border);color:var(--text-muted);background:var(--bg-primary);transition:all .3s ease;flex-shrink:0}
+.step-dot.active .dot{border-color:var(--accent);background:var(--accent);color:#fff;box-shadow:0 0 12px rgba(124,58,237,.4)}
+.step-dot.completed .dot{border-color:var(--success);background:var(--success);color:#fff}
+.step-dot .step-label{margin-left:8px;font-size:.8rem;color:var(--text-muted);white-space:nowrap;transition:color .3s}
+.step-dot.active .step-label{color:var(--text-primary);font-weight:500}
+.step-dot.completed .step-label{color:var(--success)}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 8px;min-width:20px;transition:background .3s}
+.step-line.done{background:var(--success)}
+
+/* ===== CARDS ===== */
+.card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px}
+.card-title{font-size:1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ===== FORM ELEMENTS ===== */
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:.85rem;font-weight:500;color:var(--text-secondary);margin-bottom:6px}
+.form-group label .required{color:var(--error);margin-left:2px}
+textarea,input[type="text"],input[type="number"],select{width:100%;padding:10px 14px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary);outline:none;transition:border-color var(--transition);resize:vertical}
+textarea:focus,input[type="text"]:focus,input[type="number"]:focus,select:focus{border-color:var(--accent)}
+textarea{min-height:100px;line-height:1.6}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+select option{background:var(--bg-secondary);color:var(--text-primary)}
+
+/* ===== BUTTONS ===== */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius);font-weight:500;cursor:pointer;border:none;transition:all var(--transition);font-size:.9rem}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,.3)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--text-muted)}
+.btn-sm{padding:6px 14px;font-size:.8rem}
+.btn-group{display:flex;gap:10px;margin-top:20px}
+
+/* ===== RADIO GROUP ===== */
+.radio-group{display:flex;gap:8px;flex-wrap:wrap}
+.radio-card{padding:10px 18px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all var(--transition);font-size:.85rem;color:var(--text-secondary);user-select:none}
+.radio-card:hover{border-color:var(--text-muted);color:var(--text-primary)}
+.radio-card.selected{border-color:var(--accent);background:rgba(124,58,237,.1);color:var(--accent-light)}
+
+/* ===== TOGGLE ===== */
+.toggle-wrap{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.toggle-track{width:40px;height:22px;border-radius:11px;background:var(--bg-hover);border:1px solid var(--border);position:relative;transition:all .3s}
+.toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text-muted);transition:all .3s}
+.toggle-wrap.on .toggle-track{background:var(--accent);border-color:var(--accent)}
+.toggle-wrap.on .toggle-track::after{left:20px;background:#fff}
+.toggle-label{font-size:.85rem;color:var(--text-secondary)}
+
+/* ===== BADGE ===== */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:500}
+.badge-purple{background:rgba(124,58,237,.15);color:var(--accent-light)}
+.badge-green{background:rgba(16,185,129,.15);color:var(--success)}
+.badge-yellow{background:rgba(245,158,11,.15);color:var(--warning)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--error)}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar{height:8px;background:var(--bg-primary);border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-bar .fill{height:100%;border-radius:4px;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),var(--accent-light))}
+
+/* ===== RESULT CARD ===== */
+.result-card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-top:20px}
+.result-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:between;cursor:pointer;user-select:none}
+.result-header h4{font-size:.95rem;font-weight:600;flex:1}
+.result-header .chevron{transition:transform .3s;color:var(--text-muted)}
+.result-header.open .chevron{transform:rotate(180deg)}
+.result-body{padding:20px;display:none}
+.result-header.open+.result-body{display:block}
+.result-body p,.result-body li{color:var(--text-secondary);line-height:1.7;font-size:.88rem}
+.result-body ul{padding-left:20px}
+.result-body li{margin-bottom:4px}
+
+/* ===== STYLE SELECTOR CARDS ===== */
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.style-card{padding:16px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:all var(--transition);position:relative}
+.style-card:hover{border-color:var(--text-muted);transform:translateY(-2px)}
+.style-card.selected{border-color:var(--accent);box-shadow:0 0 16px rgba(124,58,237,.2)}
+.style-card .style-name{font-weight:600;font-size:.9rem;margin-bottom:4px}
+.style-card .style-desc{font-size:.78rem;color:var(--text-secondary);margin-bottom:10px}
+.style-card .style-colors{display:flex;gap:4px}
+.style-card .color-dot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.1)}
+.style-card .check-mark{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:var(--accent);display:none;align-items:center;justify-content:center;font-size:.7rem;color:#fff}
+.style-card.selected .check-mark{display:flex}
+
+/* ===== TIMELINE ===== */
+.timeline{display:flex;align-items:center;gap:0;margin:20px 0;padding:16px 0;overflow-x:auto}
+.timeline .shot-block{min-width:60px;padding:8px 4px;background:var(--bg-surface);border:1px solid var(--border);border-radius:4px;text-align:center;font-size:.7rem;flex-shrink:0;position:relative}
+.timeline .shot-block .shot-num{font-weight:600;color:var(--accent-light);font-size:.75rem}
+.timeline .shot-block .shot-dur{color:var(--text-muted);margin-top:2px}
+.timeline .shot-block.act1{border-top:3px solid #7c3aed}
+.timeline .shot-block.act2{border-top:3px solid #3b82f6}
+.timeline .shot-block.act3{border-top:3px solid #f59e0b}
+.timeline .shot-block.act4{border-top:3px solid #10b981}
+.timeline .transition-mark{font-size:.65rem;color:var(--text-muted);padding:0 2px;flex-shrink:0;writing-mode:vertical-rl;max-height:40px}
+
+/* ===== TABLE ===== */
+.data-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.data-table th{text-align:left;padding:10px 14px;background:var(--bg-primary);color:var(--text-secondary);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap}
+.data-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:top}
+.data-table tr:hover td{background:var(--bg-hover)}
+
+/* ===== SKILLS GRID ===== */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.skill-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:all var(--transition)}
+.skill-card:hover{border-color:var(--text-muted);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.skill-card .skill-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.skill-card .skill-icon{font-size:1.3rem}
+.skill-card .skill-name{font-weight:600;font-size:.95rem;flex:1}
+.skill-card .skill-desc{font-size:.82rem;color:var(--text-secondary);line-height:1.5;margin-bottom:10px}
+.skill-card .skill-tags{display:flex;flex-wrap:wrap;gap:4px}
+.skill-card .skill-tag{font-size:.7rem;padding:2px 8px;background:var(--bg-primary);border-radius:10px;color:var(--text-muted)}
+.skill-card .skill-detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.skill-card.expanded .skill-detail{display:block}
+
+/* ===== SEARCH ===== */
+.search-box{position:relative;margin-bottom:20px}
+.search-box input{padding-left:36px}
+.search-box .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.9rem}
+
+/* ===== FILTER TABS ===== */
+.filter-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg-secondary);padding:4px;border-radius:var(--radius);width:fit-content}
+.filter-tab{padding:6px 16px;border-radius:6px;font-size:.82rem;cursor:pointer;color:var(--text-secondary);transition:all var(--transition);border:none;background:none;user-select:none}
+.filter-tab:hover{color:var(--text-primary)}
+.filter-tab.active{background:var(--accent);color:#fff}
+
+/* ===== PLATFORM CARDS ===== */
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.platform-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;cursor:pointer;transition:all var(--transition)}
+.platform-card:hover{border-color:var(--text-muted)}
+.platform-card.selected{border-color:var(--accent);box-shadow:0 0 16px rgba(124,58,237,.2)}
+.platform-card .platform-name{font-weight:600;font-size:1rem;margin-bottom:8px}
+.platform-card .platform-specs{font-size:.78rem;color:var(--text-secondary);line-height:1.8}
+.platform-card .platform-specs span{color:var(--text-primary);font-weight:500}
+
+/* ===== QUALITY CHECK ===== */
+.quality-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.85rem}
+.quality-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.quality-dot.pass{background:var(--success)}
+.quality-dot.fail{background:var(--error)}
+.quality-dot.warn{background:var(--warning)}
+
+/* ===== GUIDE ===== */
+.guide-section{margin-bottom:32px}
+.guide-section h3{font-size:1.1rem;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.guide-step{display:flex;gap:16px;margin-bottom:16px}
+.guide-step .step-num{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.85rem;flex-shrink:0}
+.guide-step .step-content{flex:1}
+.guide-step .step-content h4{font-size:.95rem;margin-bottom:4px}
+.guide-step .step-content p{font-size:.85rem;color:var(--text-secondary);line-height:1.6}
+.faq-item{margin-bottom:12px}
+.faq-q{font-weight:500;font-size:.9rem;padding:10px 0;cursor:pointer;color:var(--text-primary);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.faq-q::after{content:'+';color:var(--text-muted);transition:transform .3s}
+.faq-q.open::after{transform:rotate(45deg)}
+.faq-a{display:none;padding:10px 0;font-size:.85rem;color:var(--text-secondary);line-height:1.7}
+.faq-q.open+.faq-a{display:block}
+
+/* ===== EXPORT TIMELINE ===== */
+.export-timeline{display:flex;align-items:stretch;gap:0;margin:16px 0;overflow-x:auto;padding:8px 0}
+.export-timeline .et-shot{min-width:50px;max-width:80px;background:var(--bg-surface);border:1px solid var(--border);border-radius:4px;text-align:center;padding:6px 4px;font-size:.68rem;flex-shrink:0}
+.export-timeline .et-shot .et-num{font-weight:600;color:var(--accent-light)}
+.export-timeline .et-trans{display:flex;align-items:center;font-size:.6rem;color:var(--warning);padding:0 1px;flex-shrink:0}
+
+/* ===== CHAR COUNT ===== */
+.char-count{font-size:.75rem;color:var(--text-muted);text-align:right;margin-top:4px}
+.char-count.over{color:var(--error)}
+
+/* ===== TAG INPUT ===== */
+.tag-input-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);min-height:42px;align-items:center;cursor:text}
+.tag-input-wrap:focus-within{border-color:var(--accent)}
+.tag-input-wrap .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;background:rgba(124,58,237,.15);color:var(--accent-light);border-radius:12px;font-size:.8rem}
+.tag-input-wrap .tag .tag-remove{cursor:pointer;opacity:.6;font-size:.7rem}
+.tag-input-wrap .tag .tag-remove:hover{opacity:1}
+.tag-input-wrap input{border:none;background:none;outline:none;color:var(--text-primary);font-size:.85rem;flex:1;min-width:80px;padding:2px 0}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+.sidebar{transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0}
+.view{padding:20px}
+.mobile-toggle{display:flex!important}
+}
+.mobile-toggle{display:none;position:fixed;top:12px;left:12px;z-index:200;width:36px;height:36px;border-radius:var(--radius);background:var(--bg-secondary);border:1px solid var(--border);align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);font-size:1.1rem}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:slideUp .4s ease both}
+.animate-in:nth-child(2){animation-delay:.05s}
+.animate-in:nth-child(3){animation-delay:.1s}
+.animate-in:nth-child(4){animation-delay:.15s}
+.animate-in:nth-child(5){animation-delay:.2s}
+
+/* ===== LOADING SPINNER ===== */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== TOOLTIP ===== */
+.info-tip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--bg-hover);color:var(--text-muted);font-size:.65rem;cursor:help;margin-left:4px}
+
+/* ===== WORKFLOW DIAGRAM ===== */
+.workflow-diagram{display:flex;align-items:center;gap:8px;margin:20px 0;flex-wrap:wrap;justify-content:center}
+.wf-node{padding:10px 18px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);font-size:.82rem;font-weight:500;text-align:center;min-width:100px}
+.wf-node.highlight{border-color:var(--accent);background:rgba(124,58,237,.1);color:var(--accent-light)}
+.wf-arrow{color:var(--text-muted);font-size:1.2rem}
+
+/* ===== SRT PREVIEW ===== */
+.srt-preview{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;font-family:'Courier New',monospace;font-size:.78rem;line-height:1.8;color:var(--text-secondary);max-height:200px;overflow-y:auto;white-space:pre-wrap}
+
+/* ===== SECTION DIVIDER ===== */
+.section-divider{display:flex;align-items:center;gap:12px;margin:28px 0 16px;font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1 class="font-display">Manju</h1>
+    <p>AI漫剧创作平台</p>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-view="workspace" onclick="switchView('workspace')">
+      <span class="nav-icon">🎬</span><span>创作工作台</span>
+    </button>
+    <button class="nav-item" data-view="skills" onclick="switchView('skills')">
+      <span class="nav-icon">📋</span><span>技能库</span>
+    </button>
+    <button class="nav-item" data-view="style" onclick="switchView('style')">
+      <span class="nav-icon">⚙️</span><span>风格配置</span>
+    </button>
+    <button class="nav-item" data-view="guide" onclick="switchView('guide')">
+      <span class="nav-icon">📖</span><span>使用指南</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">Manju v1.0 · Powered by AI</div>
+</aside>
+
+<!-- Main Content -->
+<div class="main">
+
+<!-- ==================== VIEW 1: 创作工作台 ==================== -->
+<div class="view active" id="view-workspace">
+  <div class="view-header">
+    <h2 class="font-display">创作工作台</h2>
+    <p>从选题到成片，AI辅助完成漫剧全流程创作</p>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-dot active" data-step="1" onclick="goToStep(1)"><span class="dot">1</span><span class="step-label">选题分析</span></div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" data-step="2" onclick="goToStep(2)"><span class="dot">2</span><span class="step-label">故事策划</span></div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" data-step="3" onclick="goToStep(3)"><span class="dot">3</span><span class="step-label">素材生成</span></div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot" data-step="4" onclick="goToStep(4)"><span class="dot">4</span><span class="step-label">剪辑合成</span></div>
+    <div class="step-line" id="line4"></div>
+    <div class="step-dot" data-step="5" onclick="goToStep(5)"><span class="dot">5</span><span class="step-label">导出成片</span></div>
+  </div>
+
+  <!-- ===== STEP 1: 选题分析 ===== -->
+  <div class="step-content" id="step1">
+    <div class="card animate-in">
+      <div class="card-title">📝 输入你的故事创意</div>
+      <div class="form-group">
+        <label>故事描述 <span class="required">*</span></label>
+        <textarea id="storyInput" placeholder="描述你的故事创意，例如：一个现代都市女孩意外穿越到古代，成为王妃后用现代知识改变命运的故事..." oninput="updateCharCount(this,'storyCount',10)"></textarea>
+        <div class="char-count" id="storyCount">0 / 至少10字</div>
+      </div>
+      <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeTopic()" disabled>
+        <span>🔍</span> 分析题材
+      </button>
+    </div>
+    <div id="analysisResult"></div>
+  </div>
+
+  <!-- ===== STEP 2: 故事策划 ===== -->
+  <div class="step-content" id="step2" style="display:none">
+    <div class="card animate-in">
+      <div class="card-title">📋 故事参数配置</div>
+      <div class="form-group">
+        <label>题材类型</label>
+        <select id="genreSelect">
+          <option value="">请先完成选题分析</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>故事描述</label>
+        <textarea id="storyDesc2" placeholder="故事描述（从上一步带入，可编辑）"></textarea>
+      </div>
+      <div class="form-group">
+        <label>目标时长</label>
+        <div class="radio-group" id="durationGroup">
+          <div class="radio-card" data-value="60" onclick="selectRadio('durationGroup',60)">60秒</div>
+          <div class="radio-card" data-value="90" onclick="selectRadio('durationGroup',90)">90秒</div>
+          <div class="radio-card selected" data-value="180" onclick="selectRadio('durationGroup',180)">180秒</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>视频模型</label>
+        <select id="videoModel">
+          <option value="kling">可灵 (Kling)</option>
+          <option value="jimeng">即梦 (Jimeng)</option>
+          <option value="runway">Runway</option>
+          <option value="pika">Pika</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>单镜头最大时长（秒）</label>
+        <input type="number" id="maxClipDur" value="5" min="2" max="10">
+      </div>
+      <button class="btn btn-primary" onclick="generatePlan()">
+        <span>📊</span> 生成策划方案
+      </button>
+    </div>
+    <div id="planResult"></div>
+  </div>
+
+  <!-- ===== STEP 3: 素材生成 ===== -->
+  <div class="step-content" id="step3" style="display:none">
+    <div class="card animate-in">
+      <div class="card-title">🎨 视觉风格选择</div>
+      <div class="form-group">
+        <div class="toggle-wrap" id="autoStyleToggle" onclick="toggleSwitch('autoStyleToggle')">
+          <div class="toggle-track"></div>
+          <span class="toggle-label">自动匹配（根据题材类型自动选择风格）</span>
+        </div>
+      </div>
+      <div class="style-grid" id="visualStyleGrid">
+        <div class="style-card" data-style="3d-guofeng" onclick="selectStyle('visual',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">3D国风写实</div>
+          <div class="style-desc">适用：玄幻/古风/仙侠/武侠</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#c23b22"></div>
+            <div class="color-dot" style="background:#3b5998"></div>
+            <div class="color-dot" style="background:#daa520"></div>
+            <div class="color-dot" style="background:#1a1a1a"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="anime" onclick="selectStyle('visual',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">二次元动漫</div>
+          <div class="style-desc">适用：甜宠/校园/都市</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#ff6b9d"></div>
+            <div class="color-dot" style="background:#c084fc"></div>
+            <div class="color-dot" style="background:#60a5fa"></div>
+            <div class="color-dot" style="background:#fbbf24"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="realistic" onclick="selectStyle('visual',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">写实风格</div>
+          <div class="style-desc">适用：都市/悬疑/家庭伦理</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#8b7355"></div>
+            <div class="color-dot" style="background:#708090"></div>
+            <div class="color-dot" style="background:#2f4f4f"></div>
+            <div class="color-dot" style="background:#d2b48c"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="cartoon" onclick="selectStyle('visual',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">卡通风格</div>
+          <div class="style-desc">适用：甜宠/家庭伦理/儿童</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#ff8c42"></div>
+            <div class="color-dot" style="background:#ffd166"></div>
+            <div class="color-dot" style="background:#06d6a0"></div>
+            <div class="color-dot" style="background:#118ab2"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="ink" onclick="selectStyle('visual',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">仙侠水墨</div>
+          <div class="style-desc">适用：仙侠/武侠/玄幻</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#2c2c2c"></div>
+            <div class="color-dot" style="background:#5c5c5c"></div>
+            <div class="color-dot" style="background:#8b8b8b"></div>
+            <div class="color-dot" style="background:#d4c5a9"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">🎵 音频风格选择</div>
+      <div class="style-grid" id="audioStyleGrid">
+        <div class="style-card" data-style="ancient" onclick="selectStyle('audio',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">古风配乐</div>
+          <div class="style-desc">古筝 · 笛子 · 琵琶</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#8b4513"></div>
+            <div class="color-dot" style="background:#daa520"></div>
+            <div class="color-dot" style="background:#d2691e"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="pop" onclick="selectStyle('audio',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">流行配乐</div>
+          <div class="style-desc">钢琴 · 吉他 · 电子</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#4169e1"></div>
+            <div class="color-dot" style="background:#ff69b4"></div>
+            <div class="color-dot" style="background:#00ced1"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="suspense" onclick="selectStyle('audio',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">悬疑配乐</div>
+          <div class="style-desc">弦乐 · 低音 · 环境音</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#2c2c2c"></div>
+            <div class="color-dot" style="background:#4a0e0e"></div>
+            <div class="color-dot" style="background:#1a1a2e"></div>
+          </div>
+        </div>
+        <div class="style-card" data-style="happy" onclick="selectStyle('audio',this)">
+          <div class="check-mark">✓</div>
+          <div class="style-name">欢快配乐</div>
+          <div class="style-desc">轻快 · 活泼 · 节奏感</div>
+          <div class="style-colors">
+            <div class="color-dot" style="background:#ff8c00"></div>
+            <div class="color-dot" style="background:#ffd700"></div>
+            <div class="color-dot" style="background:#32cd32"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateAssets()" style="margin-top:16px">
+      <span>🎬</span> 生成素材清单
+    </button>
+    <div id="assetResult"></div>
+  </div>
+
+  <!-- ===== STEP 4: 剪辑合成 ===== -->
+  <div class="step-content" id="step4" style="display:none">
+    <div class="card animate-in">
+      <div class="card-title">✂️ 转场效果配置</div>
+      <div class="form-group">
+        <div class="toggle-wrap" id="autoTransToggle" onclick="toggleSwitch('autoTransToggle')">
+          <div class="toggle-track"></div>
+          <span class="toggle-label">自动匹配转场（根据镜头情绪变化自动选择）</span>
+        </div>
+      </div>
+      <div class="form-group" id="transSelectGroup">
+        <label>默认转场效果</label>
+        <select id="defaultTransition">
+          <option value="fade">淡入淡出</option>
+          <option value="dissolve">溶解过渡</option>
+          <option value="wipe-right">向右擦除</option>
+          <option value="wipe-left">向左擦除</option>
+          <option value="slide-up">向上滑动</option>
+          <option value="slide-down">向下滑动</option>
+          <option value="zoom-in">放大切入</option>
+          <option value="zoom-out">缩小切入</option>
+          <option value="glitch">故障效果</option>
+          <option value="blur">模糊过渡</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">📐 画质与字幕</div>
+      <div class="form-group">
+        <label>画质预设</label>
+        <div class="radio-group" id="qualityGroup">
+          <div class="radio-card" data-value="draft" onclick="selectRadio('qualityGroup','draft')">草稿</div>
+          <div class="radio-card selected" data-value="standard" onclick="selectRadio('qualityGroup','standard')">标准</div>
+          <div class="radio-card" data-value="hd" onclick="selectRadio('qualityGroup','hd')">高清</div>
+          <div class="radio-card" data-value="cinema" onclick="selectRadio('qualityGroup','cinema')">电影级</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="toggle-wrap" id="subtitleToggle" onclick="toggleSwitch('subtitleToggle')">
+          <div class="toggle-track"></div>
+          <span class="toggle-label">启用字幕</span>
+        </div>
+      </div>
+      <div class="form-group" id="fontSizeGroup" style="display:none">
+        <label>字幕字号</label>
+        <select id="fontSize">
+          <option value="small">小 (24px)</option>
+          <option value="medium" selected>中 (32px)</option>
+          <option value="large">大 (40px)</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateEditPlan()" style="margin-top:16px">
+      <span>🎞️</span> 生成剪辑方案
+    </button>
+    <div id="editResult"></div>
+  </div>
+
+  <!-- ===== STEP 5: 导出成片 ===== -->
+  <div class="step-content" id="step5" style="display:none">
+    <div class="card animate-in">
+      <div class="card-title">📱 目标平台</div>
+      <div class="platform-grid" id="platformGrid">
+        <div class="platform-card" data-platform="douyin" onclick="selectPlatform(this)">
+          <div class="platform-name">抖音</div>
+          <div class="platform-specs">
+            分辨率：<span>1080×1920</span><br>
+            比例：<span>9:16</span><br>
+            最大时长：<span>300秒</span><br>
+            码率：<span>8Mbps</span><br>
+            标题限制：<span>≤55字</span><br>
+            标签限制：<span>≤10个</span>
+          </div>
+        </div>
+        <div class="platform-card" data-platform="kuaishou" onclick="selectPlatform(this)">
+          <div class="platform-name">快手</div>
+          <div class="platform-specs">
+            分辨率：<span>1080×1920</span><br>
+            比例：<span>9:16</span><br>
+            最大时长：<span>300秒</span><br>
+            码率：<span>8Mbps</span>
+          </div>
+        </div>
+        <div class="platform-card" data-platform="xiaohongshu" onclick="selectPlatform(this)">
+          <div class="platform-name">小红书</div>
+          <div class="platform-specs">
+            分辨率：<span>1080×1920</span><br>
+            比例：<span>9:16</span><br>
+            最大时长：<span>300秒</span><br>
+            码率：<span>10Mbps</span>
+          </div>
+        </div>
+        <div class="platform-card" data-platform="shipinhao" onclick="selectPlatform(this)">
+          <div class="platform-name">视频号</div>
+          <div class="platform-specs">
+            分辨率：<span>1080×1920</span><br>
+            比例：<span>9:16</span><br>
+            最大时长：<span>1800秒</span><br>
+            码率：<span>8Mbps</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card animate-in">
+      <div class="card-title">📝 发布信息</div>
+      <div class="form-group">
+        <label>标题 <span class="required">*</span></label>
+        <input type="text" id="exportTitle" placeholder="输入视频标题..." oninput="updateExportTitleCount()">
+        <div class="char-count" id="titleCharCount">0 / 55字</div>
+      </div>
+      <div class="form-group">
+        <label>描述</label>
+        <textarea id="exportDesc" placeholder="输入视频描述..." rows="3" oninput="updateCharCount(this,'descCharCount',0)"></textarea>
+        <div class="char-count" id="descCharCount">0 字</div>
+      </div>
+      <div class="form-group">
+        <label>标签</label>
+        <div class="tag-input-wrap" id="tagInputWrap" onclick="document.getElementById('tagInput').focus()">
+          <input type="text" id="tagInput" placeholder="输入标签后按回车添加..." onkeydown="handleTagInput(event)">
+        </div>
+        <div class="char-count" id="tagCharCount">0 / 10 个标签</div>
+      </div>
+      <div class="form-group">
+        <button class="btn btn-sm btn-secondary" onclick="autoSuggestTags()">💡 自动推荐标签</button>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generateExportPlan()" style="margin-top:16px">
+      <span>📦</span> 生成导出方案
+    </button>
+    <div id="exportResult"></div>
+  </div>
+
+  <!-- Step Navigation -->
+  <div class="btn-group" id="stepNav" style="margin-top:24px">
+    <button class="btn btn-secondary" id="prevStepBtn" onclick="prevStep()" style="display:none">← 上一步</button>
+    <button class="btn btn-primary" id="nextStepBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+</div>
+
+<!-- ==================== VIEW 2: 技能库 ==================== -->
+<div class="view" id="view-skills">
+  <div class="view-header">
+    <h2 class="font-display">技能库</h2>
+    <p>Manju 平台内置 13 个专业技能，覆盖漫剧创作全流程</p>
+  </div>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="skillSearch" placeholder="搜索技能名称或关键词..." oninput="filterSkills()">
+  </div>
+  <div class="filter-tabs" id="skillFilterTabs">
+    <button class="filter-tab active" data-filter="all" onclick="filterSkillCategory('all',this)">全部</button>
+    <button class="filter-tab" data-filter="core" onclick="filterSkillCategory('core',this)">核心创作</button>
+    <button class="filter-tab" data-filter="ops" onclick="filterSkillCategory('ops',this)">运营工具</button>
+    <button class="filter-tab" data-filter="general" onclick="filterSkillCategory('general',this)">通用工具</button>
+  </div>
+  <div class="skills-grid" id="skillsGrid"></div>
+</div>
+
+<!-- ==================== VIEW 3: 风格配置 ==================== -->
+<div class="view" id="view-style">
+  <div class="view-header">
+    <h2 class="font-display">风格配置</h2>
+    <p>管理视觉风格、音频风格和平台发布规格</p>
+  </div>
+
+  <div class="section-divider">视觉风格</div>
+  <div class="style-grid" id="styleVisualGrid"></div>
+
+  <div class="section-divider" style="margin-top:32px">音频风格</div>
+  <div class="style-grid" id="styleAudioGrid"></div>
+
+  <div class="section-divider" style="margin-top:32px">平台规格</div>
+  <div class="platform-grid" id="stylePlatformGrid"></div>
+</div>
+
+<!-- ==================== VIEW 4: 使用指南 ==================== -->
+<div class="view" id="view-guide">
+  <div class="view-header">
+    <h2 class="font-display">使用指南</h2>
+    <p>快速上手 Manju AI 漫剧创作平台</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🗺️ 创作流程总览</div>
+    <div class="workflow-diagram">
+      <div class="wf-node highlight">选题分析</div>
+      <span class="wf-arrow">→</span>
+      <div class="wf-node highlight">故事策划</div>
+      <span class="wf-arrow">→</span>
+      <div class="wf-node highlight">素材生成</div>
+      <span class="wf-arrow">→</span>
+      <div class="wf-node highlight">剪辑合成</div>
+      <span class="wf-arrow">→</span>
+      <div class="wf-node highlight">导出成片</div>
+    </div>
+    <p style="font-size:.85rem;color:var(--text-secondary);text-align:center;margin-top:8px">五个步骤，从创意到成片，AI 全程辅助</p>
+  </div>
+
+  <div class="guide-section">
+    <h3>详细步骤说明</h3>
+    <div class="guide-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>选题分析</h4>
+        <p>输入你的故事创意描述（至少10个字），系统将自动分析题材类型、匹配度评分，并生成故事大纲、角色设定和冲突点建议。支持玄幻、都市、甜宠、悬疑、武侠、古风、家庭伦理七大类型。</p>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>故事策划</h4>
+        <p>配置目标时长、视频模型和镜头参数。系统将根据故事复杂度自动计算分镜数量，按四幕结构分配镜头，生成视觉时间线和角色圣经。</p>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>素材生成</h4>
+        <p>选择视觉风格和音频风格（可开启自动匹配），系统为每个镜头生成对应的视觉提示词和音频提示词，形成完整的素材清单。</p>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>剪辑合成</h4>
+        <p>配置转场效果、画质预设和字幕选项。系统生成完整的时间线方案，包含镜头排列、转场标记、SRT 字幕预览和文件大小估算。</p>
+      </div>
+    </div>
+    <div class="guide-step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h4>导出成片</h4>
+        <p>选择目标平台，填写标题、描述和标签。系统自动进行质量检查，生成符合平台规范的导出方案和推荐话题标签。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>💡 创作技巧</h3>
+    <div class="card" style="margin-bottom:12px">
+      <ul style="padding-left:20px;color:var(--text-secondary);font-size:.85rem;line-height:2">
+        <li>故事描述越详细，选题分析越准确。建议包含<strong style="color:var(--text-primary)">时代背景、主要角色、核心冲突</strong>等要素。</li>
+        <li>短剧建议控制在 <strong style="color:var(--text-primary)">60-90秒</strong>，中长剧可选择 <strong style="color:var(--text-primary)">180秒</strong>。</li>
+        <li>不同视频模型适合不同风格：可灵擅长写实，即梦擅长国风，Runway 擅长特效，Pika 擅长动画。</li>
+        <li>转场效果不宜过多使用花哨类型，<strong style="color:var(--text-primary)">淡入淡出</strong>和<strong style="color:var(--text-primary)">溶解过渡</strong>最通用。</li>
+        <li>发布前务必进行质量检查，确保分辨率、码率、时长等参数符合平台要求。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="guide-section">
+    <h3>❓ 常见问题</h3>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.classList.toggle('open')">支持哪些题材类型？</div>
+      <div class="faq-a">目前支持七大类型：玄幻、都市、甜宠、悬疑、武侠、古风、家庭伦理。系统通过关键词匹配自动识别题材，并给出匹配置信度。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.classList.toggle('open')">镜头数量是如何计算的？</div>
+      <div class="faq-a">基础镜头数 = max(8, 目标时长 / 单镜头时长)，然后根据故事复杂度（冲突点数量、关键场景数、文本长度）和题材系数进行调整。最终按四幕结构分配。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.classList.toggle('open')">可以跳过某些步骤吗？</div>
+      <div class="faq-a">可以点击步骤指示器直接跳转到任意步骤。但建议按顺序完成，因为后续步骤依赖前序步骤的数据。跳过时系统会使用默认值。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.classList.toggle('open')">导出的视频格式是什么？</div>
+      <div class="faq-a">导出为 MP4 格式（H.264 编码），分辨率和码率根据所选平台自动配置。草稿画质约 2Mbps，电影级可达 15Mbps。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.classList.toggle('open')">如何选择合适的视觉风格？</div>
+      <div class="faq-a">可以开启"自动匹配"让系统根据题材类型推荐。一般来说：玄幻/古风选 3D国风写实 或 仙侠水墨，甜宠/校园选 二次元动漫，悬疑选 写实风格，家庭伦理选 卡通风格。</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
+const state = {
+  currentView: 'workspace',
+  currentStep: 1,
+  maxStep: 1,
+  // Step 1
+  storyText: '',
+  analysisResult: null,
+  // Step 2
+  genre: '',
+  duration: 180,
+  videoModel: 'kling',
+  maxClipDur: 5,
+  planResult: null,
+  // Step 3
+  visualStyle: '',
+  audioStyle: '',
+  autoStyle: false,
+  assetResult: null,
+  // Step 4
+  autoTrans: false,
+  defaultTransition: 'fade',
+  quality: 'standard',
+  subtitleOn: false,
+  fontSize: 'medium',
+  editResult: null,
+  // Step 5
+  platform: '',
+  title: '',
+  desc: '',
+  tags: [],
+  exportResult: null
+};
+
+// ============================================================
+// DATA
+// ============================================================
+const GENRES = {
+  '玄幻': { keywords: ['仙帝','修仙','玄幻','修真','仙侠','灵力','仙','魔','神','飞升','渡劫','天劫','灵气','丹药','法宝','阵法','仙人','妖兽','秘境','修炼','珠子','灵珠','法术','变身','化形','妖','精怪','修炼者','渡劫','天劫','飞升'], multiplier: 1.2, color: '#7c3aed' },
+  '都市': { keywords: ['都市','职场','现代','城市','公司','老板','员工','白领','创业','商战','写字楼','CBD','总裁','经理','办公室','面试','加班','升职','躲债','欠债','债务','还钱','债主','房东','房租'], multiplier: 1.0, color: '#3b82f6' },
+  '甜宠': { keywords: ['甜宠','爱情','恋爱','浪漫','宠溺','霸道','总裁','公主','暗恋','告白','约会','心动','甜蜜','牵手','拥抱','亲吻','男朋友','女朋友','火花','暧昧','擦出火花','喜欢','心动'], multiplier: 0.9, color: '#ec4899' },
+  '悬疑': { keywords: ['悬疑','惊悚','推理','破案','侦探','凶手','命案','诡异','密室','线索','证据','嫌疑人','真相','阴谋','暗杀','失踪','尸体','法医','秘密','隐藏','意外'], multiplier: 1.3, color: '#6366f1' },
+  '武侠': { keywords: ['武侠','江湖','门派','武林','武功','剑法','刀','侠客','大侠','客栈','镖局','掌门','内功','轻功','暗器','比武','华山','少林','武当','行侠仗义','侠义','仗义','功夫'], multiplier: 1.1, color: '#f59e0b' },
+  '古风': { keywords: ['古风','古代','帝王','宫廷','王爷','皇后','宫女','太监','朝堂','妃子','太子','公主','丞相','将军','大臣','御膳','寝宫','选秀','宠幸'], multiplier: 1.1, color: '#d97706' },
+  '家庭伦理': { keywords: ['家庭','伦理','婆媳','夫妻','子女','家长里短','亲情','离婚','再婚','抚养','赡养','遗产','家产','兄弟姐妹','父母','孩子','婆婆','公公'], multiplier: 0.95, color: '#10b981' },
+  '奇幻': { keywords: ['猫','狗','动物','宠物','变成人类','化形','变身','珠子','魔法','奇幻','精灵','妖怪','妖精','灵兽','异世界','穿越','重生','系统','超能力','特殊能力','意外','奇遇','传说','神秘'], multiplier: 1.15, color: '#8b5cf6' }
+};
+
+const VISUAL_STYLES = {
+  '3d-guofeng': { name: '3D国风写实', genres: ['玄幻','古风','仙侠','武侠'], colors: ['朱红','靛蓝','明黄','墨黑'], prompt: '3D渲染，国风写实风格，精细材质，电影级光影，中国风场景' },
+  'anime': { name: '二次元动漫', genres: ['甜宠','都市'], colors: ['鲜艳','高饱和','明亮'], prompt: '日本动漫风格，赛璐璐渲染，大眼睛，精致线条，鲜艳色彩' },
+  'realistic': { name: '写实风格', genres: ['都市','悬疑','家庭伦理'], colors: ['自然真实','电影色调','低饱和'], prompt: '写实摄影风格，自然光线，电影色调，真实质感，浅景深' },
+  'cartoon': { name: '卡通风格', genres: ['甜宠','家庭伦理'], colors: ['明亮活泼','高对比'], prompt: '3D卡通风格，圆润造型，明亮色彩，可爱表情，柔和光影' },
+  'ink': { name: '仙侠水墨', genres: ['仙侠','武侠','玄幻'], colors: ['水墨','留白','淡彩'], prompt: '中国水墨画风格，写意笔触，留白构图，淡雅配色，飘逸意境' }
+};
+
+const AUDIO_STYLES = {
+  'ancient': { name: '古风配乐', instruments: '古筝 · 笛子 · 琵琶', mood: '悠远 · 空灵 · 古韵', genres: ['玄幻','古风','武侠','仙侠'] },
+  'pop': { name: '流行配乐', instruments: '钢琴 · 吉他 · 电子', mood: '温暖 · 治愈 · 现代感', genres: ['都市','甜宠','家庭伦理'] },
+  'suspense': { name: '悬疑配乐', instruments: '弦乐 · 低音 · 环境音', mood: '紧张 · 神秘 · 压抑', genres: ['悬疑'] },
+  'happy': { name: '欢快配乐', instruments: '轻快 · 活泼 · 节奏感', mood: '轻松 · 愉快 · 阳光', genres: ['甜宠','家庭伦理','都市'] }
+};
+
+const TRANSITIONS = {
+  'fade': '淡入淡出', 'dissolve': '溶解过渡', 'wipe-right': '向右擦除',
+  'wipe-left': '向左擦除', 'slide-up': '向上滑动', 'slide-down': '向下滑动',
+  'zoom-in': '放大切入', 'zoom-out': '缩小切入', 'glitch': '故障效果', 'blur': '模糊过渡'
+};
+
+const PLATFORMS = {
+  douyin: { name: '抖音', width: 1080, height: 1920, ratio: '9:16', maxDur: 300, bitrate: 8, titleLimit: 55, tagLimit: 10 },
+  kuaishou: { name: '快手', width: 1080, height: 1920, ratio: '9:16', maxDur: 300, bitrate: 8, titleLimit: 30, tagLimit: 10 },
+  xiaohongshu: { name: '小红书', width: 1080, height: 1920, ratio: '9:16', maxDur: 300, bitrate: 10, titleLimit: 20, tagLimit: 10 },
+  shipinhao: { name: '视频号', width: 1080, height: 1920, ratio: '9:16', maxDur: 1800, bitrate: 8, titleLimit: 30, tagLimit: 10 }
+};
+
+const QUALITY_PRESETS = {
+  draft: { name: '草稿', bitrate: 2, label: '720p', suffix: '_draft' },
+  standard: { name: '标准', bitrate: 5, label: '1080p', suffix: '' },
+  hd: { name: '高清', bitrate: 10, label: '1080p+', suffix: '_hd' },
+  cinema: { name: '电影级', bitrate: 15, label: '4K', suffix: '_cinema' }
+};
+
+const SKILLS_DATA = [
+  { id:1, name:'选题分析专家', icon:'🔍', version:'v1.2', category:'core', desc:'深度分析用户输入的故事创意，识别题材类型，评估市场潜力', triggers:['分析','选题','题材','故事创意','类型识别'], capabilities:['七大题材类型识别','关键词匹配算法','市场热度评估','竞品分析','受众画像生成','冲突点提取'] },
+  { id:2, name:'故事策划师', icon:'📋', version:'v1.1', category:'core', desc:'基于分析结果生成完整故事策划方案，包含分镜、角色和场景规划', triggers:['策划','方案','分镜','大纲','规划'], capabilities:['四幕结构规划','分镜数量计算','角色圣经生成','场景库构建','节奏曲线设计','冲突密度分析'] },
+  { id:3, name:'视觉风格设计师', icon:'🎨', version:'v1.0', category:'core', desc:'根据题材和用户偏好匹配最佳视觉风格，生成风格提示词', triggers:['风格','视觉','画风','配色','渲染'], capabilities:['五种视觉风格匹配','色彩方案生成','风格提示词','参考图推荐','风格融合建议'] },
+  { id:4, name:'音频配乐师', icon:'🎵', version:'v1.0', category:'core', desc:'为每个场景匹配背景音乐和音效方案', triggers:['配乐','音乐','音效','BGM','音频'], capabilities:['四种音频风格','场景情绪匹配','音效方案设计','节奏同步','音量曲线规划'] },
+  { id:5, name:'分镜脚本生成器', icon:'🎬', version:'v1.3', category:'core', desc:'生成逐镜头的详细脚本，包含画面描述、运镜和台词', triggers:['分镜','脚本','镜头','画面','运镜'], capabilities:['逐镜头脚本','运镜方案','台词设计','时长分配','镜头语言优化'] },
+  { id:6, name:'AI视频生成协调器', icon:'🤖', version:'v1.1', category:'core', desc:'协调多个AI视频模型，优化生成参数和提示词', triggers:['视频生成','AI','模型','可灵','即梦','Runway','Pika'], capabilities:['多模型协调','提示词优化','参数调优','批量生成管理','质量评估'] },
+  { id:7, name:'智能剪辑师', icon:'✂️', version:'v1.2', category:'core', desc:'自动化剪辑流程，包含转场、节奏控制和特效添加', triggers:['剪辑','转场','特效','节奏','合成'], capabilities:['智能转场匹配','节奏优化','特效方案','字幕生成','时间线管理'] },
+  { id:8, name:'字幕生成器', icon:'💬', version:'v1.0', category:'core', desc:'生成SRT格式字幕，支持多种样式和定位', triggers:['字幕','SRT','台词','文本','字幕样式'], capabilities:['SRT格式生成','时间码同步','多样式模板','字体配置','定位调整'] },
+  { id:9, name:'平台适配器', icon:'📱', version:'v1.1', category:'ops', desc:'根据目标平台自动调整视频参数，确保合规发布', triggers:['平台','抖音','快手','小红书','发布','适配'], capabilities:['四平台规格适配','质量检查','参数优化','合规验证','批量导出'] },
+  { id:10, name:'运营文案师', icon:'✍️', version:'v1.0', category:'ops', desc:'生成吸引人的标题、描述和话题标签', triggers:['标题','文案','描述','标签','话题','运营'], capabilities:['爆款标题生成','SEO优化','标签推荐','A/B测试方案','发布时间建议'] },
+  { id:11, name:'数据分析师', icon:'📊', version:'v1.0', category:'ops', desc:'分析视频表现数据，提供优化建议', triggers:['数据','分析','播放量','完播率','互动'], capabilities:['播放数据分析','完播率优化','互动率提升','受众分析','趋势预测'] },
+  { id:12, name:'系列化编排器', icon:'📚', version:'v1.0', category:'ops', desc:'管理多集系列剧的连贯性和发布节奏', triggers:['系列','多集','连续剧','编排','更新'], capabilities:['系列规划','集数管理','剧情连贯性','发布排期','粉丝留存策略'] },
+  { id:13, name:'质量检查员', icon:'✅', version:'v1.1', category:'general', desc:'全面检查视频质量，确保技术指标和内容合规', triggers:['检查','质量','审核','合规','检测'], capabilities:['技术指标检查','内容合规审核','画质评估','音频检查','元数据验证'] }
+];
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function switchView(viewId) {
+  state.currentView = viewId;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + viewId).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-view="${viewId}"]`).classList.add('active');
+  document.querySelector('.sidebar').classList.remove('open');
+  if (viewId === 'skills') renderSkills();
+  if (viewId === 'style') renderStyleConfig();
+}
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+function goToStep(step) {
+  if (step < 1 || step > 5) return;
+  state.currentStep = step;
+  updateStepUI();
+}
+
+function nextStep() {
+  if (state.currentStep < 5) {
+    state.currentStep++;
+    if (state.currentStep > state.maxStep) state.maxStep = state.currentStep;
+    updateStepUI();
+  }
+}
+
+function prevStep() {
+  if (state.currentStep > 1) {
+    state.currentStep--;
+    updateStepUI();
+  }
+}
+
+function updateStepUI() {
+  // Show/hide step content
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step' + i);
+    el.style.display = i === state.currentStep ? 'block' : 'none';
+  }
+  // Update step dots
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    const s = parseInt(dot.dataset.step);
+    dot.classList.remove('active', 'completed');
+    if (s === state.currentStep) dot.classList.add('active');
+    else if (s < state.maxStep) dot.classList.add('completed');
+  });
+  // Update lines
+  for (let i = 1; i <= 4; i++) {
+    const line = document.getElementById('line' + i);
+    line.classList.toggle('done', i < state.maxStep);
+  }
+  // Nav buttons
+  document.getElementById('prevStepBtn').style.display = state.currentStep > 1 ? 'inline-flex' : 'none';
+  document.getElementById('nextStepBtn').style.display = state.currentStep < 5 ? 'inline-flex' : 'none';
+  // Pre-fill step 2
+  if (state.currentStep === 2 && state.analysisResult) {
+    prefillStep2();
+  }
+  // Auto-match step 3
+  if (state.currentStep === 3 && state.autoStyle) {
+    autoMatchStyles();
+  }
+}
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function updateCharCount(el, countId, minLen) {
+  const len = el.value.length;
+  const countEl = document.getElementById(countId);
+  if (minLen > 0) {
+    countEl.textContent = len + ' / 至少' + minLen + '字';
+    countEl.classList.toggle('over', len < minLen);
+  } else {
+    countEl.textContent = len + ' 字';
+  }
+  // Enable/disable analyze button
+  if (el.id === 'storyInput') {
+    document.getElementById('analyzeBtn').disabled = len < 10;
+  }
+}
+
+function selectRadio(groupId, value) {
+  document.querySelectorAll(`#${groupId} .radio-card`).forEach(c => {
+    c.classList.toggle('selected', c.dataset.value == value);
+  });
+  if (groupId === 'durationGroup') state.duration = parseInt(value);
+  if (groupId === 'qualityGroup') state.quality = value;
+}
+
+function toggleSwitch(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('on');
+  const isOn = el.classList.contains('on');
+  if (id === 'autoStyleToggle') {
+    state.autoStyle = isOn;
+    if (isOn) autoMatchStyles();
+  }
+  if (id === 'autoTransToggle') state.autoTrans = isOn;
+  if (id === 'subtitleToggle') {
+    state.subtitleOn = isOn;
+    document.getElementById('fontSizeGroup').style.display = isOn ? 'block' : 'none';
+  }
+}
+
+function selectStyle(type, el) {
+  const grid = type === 'visual' ? 'visualStyleGrid' : 'audioStyleGrid';
+  document.querySelectorAll(`#${grid} .style-card`).forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const style = el.dataset.style;
+  if (type === 'visual') state.visualStyle = style;
+  else state.audioStyle = style;
+}
+
+function selectPlatform(el) {
+  document.querySelectorAll('#platformGrid .platform-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.platform = el.dataset.platform;
+  updateExportTitleCount();
+}
+
+function autoMatchStyles() {
+  const genre = state.genre;
+  if (!genre) return;
+  // Match visual style
+  let bestVisual = null, bestScore = 0;
+  for (const [key, style] of Object.entries(VISUAL_STYLES)) {
+    if (style.genres.includes(genre)) { bestVisual = key; break; }
+  }
+  if (bestVisual) {
+    state.visualStyle = bestVisual;
+    document.querySelectorAll('#visualStyleGrid .style-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.style === bestVisual);
+    });
+  }
+  // Match audio style
+  let bestAudio = null;
+  for (const [key, style] of Object.entries(AUDIO_STYLES)) {
+    if (style.genres.includes(genre)) { bestAudio = key; break; }
+  }
+  if (bestAudio) {
+    state.audioStyle = bestAudio;
+    document.querySelectorAll('#audioStyleGrid .style-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.style === bestAudio);
+    });
+  }
+}
+
+// ============================================================
+// STEP 1: 选题分析
+// ============================================================
+function analyzeTopic() {
+  const text = document.getElementById('storyInput').value.trim();
+  if (text.length < 10) return;
+  state.storyText = text;
+
+  // Keyword matching
+  let results = [];
+  for (const [genre, data] of Object.entries(GENRES)) {
+    let matchCount = 0;
+    let matchedKeywords = [];
+    for (const kw of data.keywords) {
+      if (text.includes(kw)) {
+        matchCount++;
+        matchedKeywords.push(kw);
+      }
+    }
+    if (matchCount > 0) {
+      const score = Math.min(100, Math.round((matchCount / Math.max(5, data.keywords.length * 0.3)) * 100));
+      results.push({ genre, score, matchedKeywords, multiplier: data.multiplier, color: data.color });
+    }
+  }
+  results.sort((a, b) => b.score - a.score);
+
+  // If no match, default to 都市
+  if (results.length === 0) {
+    results.push({ genre: '都市', score: 30, matchedKeywords: [], multiplier: 1.0, color: '#3b82f6' });
+  }
+
+  state.analysisResult = { results, text };
+  state.genre = results[0].genre;
+
+  // Generate outline
+  const topGenre = results[0];
+  const outline = generateOutline(topGenre.genre, text);
+  const characters = generateCharacters(topGenre.genre, text);
+  const conflicts = generateConflicts(topGenre.genre, text);
+  const audience = generateAudience(topGenre.genre);
+
+  // Render result
+  const container = document.getElementById('analysisResult');
+  container.innerHTML = `
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>🎯 分析结果</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <span class="badge badge-purple" style="font-size:.9rem;padding:6px 16px">${topGenre.genre}</span>
+          <div style="flex:1;min-width:200px">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px">
+              <span>匹配置信度</span>
+              <span style="color:var(--accent-light);font-weight:600">${topGenre.score}%</span>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width:${topGenre.score}%"></div></div>
+          </div>
+        </div>
+        ${results.length > 1 ? `<p style="font-size:.82rem;color:var(--text-muted);margin-bottom:12px">其他匹配：${results.slice(1).map(r => `<span class="badge" style="background:var(--bg-hover);color:var(--text-secondary);margin-left:4px">${r.genre} ${r.score}%</span>`).join('')}</p>` : ''}
+        ${topGenre.matchedKeywords.length > 0 ? `<p style="font-size:.82rem;color:var(--text-muted);margin-bottom:16px">匹配关键词：${topGenre.matchedKeywords.map(k => `<span class="badge badge-green" style="margin:2px">${k}</span>`).join('')}</p>` : ''}
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>📖 故事大纲</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <p>${outline}</p>
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header" onclick="this.classList.toggle('open')">
+        <h4>👤 角色设定</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body">${characters.map(c => `
+        <div style="margin-bottom:12px;padding:12px;background:var(--bg-primary);border-radius:var(--radius)">
+          <strong style="color:var(--text-primary)">${c.name}</strong>
+          <span class="badge badge-purple" style="margin-left:8px">${c.role}</span>
+          <p style="margin-top:6px">${c.desc}</p>
+        </div>`).join('')}</div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header" onclick="this.classList.toggle('open')">
+        <h4>⚡ 冲突点</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body"><ul>${conflicts.map(c => typeof c === 'string' ? `<li>${c}</li>` : `<li><strong>${c.title}</strong>：${c.desc}</li>`).join('')}</ul></div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header" onclick="this.classList.toggle('open')">
+        <h4>👥 受众分析</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body"><ul>${audience.map(a => `<li>${a}</li>`).join('')}</ul></div>
+    </div>
+  `;
+}
+
+function generateOutline(genre, text) {
+  // Extract key elements from user input
+  const sentences = text.split(/[，。！？,\.!\?]+/).filter(s => s.trim().length > 2);
+  const mainIdea = sentences.slice(0, 3).join('。'); // First 1-3 sentences as core premise
+  
+  // Extract key nouns/concepts from text
+  const conceptPatterns = [
+    /一只(.+?)(?:的|意外|因此|从而|从此|然后|又)/g,
+    /(.+?)(?:意外|因此|从而|从此|然后|又|碰见|遇见|遇到)/g,
+    /(?:变成|化为|化形|变身)(.{2,6}?)/g,
+    /(.+?)(?:的男|的女|的主人|的主角|的男主人|的女主人)/g,
+    /(?:因|因为)(.+?)(?:而|的|躲|逃)/g,
+    /(?:和|与)(.+?)(?:之间|之间碰撞|之间产生)/g
+  ];
+  
+  let extractedElements = [];
+  for (const pat of conceptPatterns) {
+    let m;
+    while ((m = pat.exec(text)) !== null) {
+      if (m[1] && m[1].length >= 2 && !extractedElements.includes(m[1])) {
+        extractedElements.push(m[1].trim());
+      }
+    }
+    if (m && m[0] && m[0] !== m[1] && !extractedElements.includes(m[0])) {
+      extractedElements.push(m[0].trim());
+    }
+  }
+  
+  // Build outline based on user's actual content
+  const elements = extractedElements.length > 0 ? extractedElements : [mainIdea];
+  const coreDesc = elements.slice(0, 4).join('、');
+  
+  // Genre-specific narrative framework + user content
+  const frameworks = {
+    '玄幻': `基于您的创意，这是一个融合了「${coreDesc}」的玄幻故事。故事以${elements[0] || '主角的奇遇'}为核心起点，展开一段跨越凡俗与超凡的冒险旅程。核心冲突在于${elements[1] || '神秘力量的觉醒'}与${elements[2] || '现实世界的碰撞'}之间的张力。建议采用"逆袭升级"的叙事节奏，每集设置一个小高潮，通过${elements[3] || '修炼与成长'}的递进保持观众期待感。`,
+    '都市': `这是一个以「${coreDesc}」为核心的现代都市故事。故事围绕${elements[0] || '主角'}展开，在都市生活的压力与${elements[1] || '意外际遇'}之间寻找平衡。核心矛盾集中在${elements[2] || '现实困境'}与${elements[3] || '内心追求'}之间的拉扯。建议采用"日常+反转"的叙事模式，通过${elements.slice(0,2).join('和')}的互动制造戏剧张力，在平淡中制造惊喜。`,
+    '甜宠': `这是一个以「${coreDesc}」为情感主线的甜蜜故事。${elements[0] || '主角'}与${elements[1] || '另一半'}的相遇充满戏剧性，通过一系列${elements[2] || '甜蜜互动'}推动感情升温。核心看点在于${elements[3] || '两人之间的化学反应'}。建议采用"糖中带玻璃渣"的叙事策略，在甜蜜中穿插微小波折，让观众的情感体验更加丰富。`,
+    '悬疑': `这是一个以「${coreDesc}」为悬念核心的推理故事。${elements[0] || '关键事件'}引发了一连串${elements[1] || '意想不到的发现'}，真相远比表象更加复杂。核心冲突在于${elements[2] || '隐藏的秘密'}与${elements[3] || '表面现象'}之间的巨大落差。建议采用"倒叙+插叙"的叙事结构，每个镜头都包含暗示性细节，鼓励观众参与推理。`,
+    '武侠': `这是一个以「${coreDesc}」为内核的江湖故事。${elements[0] || '主角'}在${elements[1] || '江湖历练'}中逐渐成长，${elements[2] || '侠义精神'}与${elements[3] || '江湖规则'}产生碰撞。核心冲突在于个人信念与江湖大义之间的抉择。建议采用"快节奏+慢情感"的叙事方式，武打场面干脆利落，情感戏份细腻深沉。`,
+    '古风': `这是一个以「${coreDesc}」为背景的古代故事。${elements[0] || '主角'}在${elements[1] || '古代社会'}中努力生存，${elements[2] || '权力斗争'}与${elements[3] || '个人命运'}交织在一起。核心冲突在于个人选择与时代洪流的碰撞。建议采用"细腻+大气"的叙事风格，注重服饰、礼仪、建筑等细节的还原。`,
+    '家庭伦理': `这是一个以「${coreDesc}」为核心的家庭故事。${elements[0] || '家庭成员'}之间因${elements[1] || '观念差异'}产生矛盾，${elements[2] || '代际冲突'}与${elements[3] || '亲情羁绊'}推动故事发展。核心冲突在于传统观念与现代生活方式之间的碰撞。建议采用"写实+温情"的叙事方式。`,
+    '奇幻': `基于您的创意，这是一个以「${coreDesc}」为核心的奇幻故事。${elements[0] || '主角'}因${elements[1] || '一次意外'}获得了${elements[2] || '非凡的能力或身份'}，从此与${elements[3] || '原本的世界'}产生了奇妙的碰撞。核心看点在于${elements[0] || '主角'}如何适应${elements[2] || '新的身份'}，以及与${elements[1] || '周围人'}之间擦出的火花。建议采用"奇幻+温情"的叙事方式，在超现实的设定中注入真实的人情味，让观众在惊奇中感受到温暖。`
+  };
+  return frameworks[genre] || frameworks['奇幻'];
+}
+
+function generateCharacters(genre, text) {
+  // Extract character hints from user input
+  const charHints = [];
+  const charPatterns = [
+    /一只(.+?)(?:意外|吃下|因此|变成)/,
+    /(?:的|因)(.+?)(?:的男主人|的女主人|的男主|的女主)/,
+    /(?:碰见|遇见|遇到)(.+?)(?:的|，|。|$)/,
+    /(?:和|与)(.+?)(?:之间|碰撞)/
+  ];
+  for (const p of charPatterns) {
+    const m = text.match(p);
+    if (m && m[1] && !charHints.includes(m[1].trim())) charHints.push(m[1].trim());
+  }
+  
+  // Detect gender from text
+  const hasMale = /男主|男主人|男生|男人|他/.test(text);
+  const hasFemale = /女主|女主人|女生|女人|她/.test(text);
+  
+  // Build characters based on extracted hints
+  const char1 = charHints[0] || '主角';
+  const char2 = charHints[1] || (hasMale ? '男主角' : '对方');
+  
+  const chars = {
+    '玄幻': [
+      { name: char1, role: '主角', desc: `故事的核心角色${charHints[0] ? '——' + char1 : ''}，在机缘巧合下踏上非凡之路。性格中既有${text.includes('行侠') ? '行侠仗义的正义感' : '坚韧不拔的意志'}，也有对新身份的困惑与好奇。成长弧线从懵懂到觉醒，是整个故事的灵魂。` },
+      { name: char2, role: '重要角色', desc: `与${char1}命运交织的关键人物${charHints[1] ? '——' + char2 : ''}，在故事中扮演着引导者或对手的角色。与主角之间有着复杂的情感纠葛。` },
+      { name: '反派/阻碍者', role: '反派', desc: '代表着主角成长道路上的最大障碍，实力强大且心机深沉。与主角有着宿命般的对立关系，推动故事走向高潮。' }
+    ],
+    '都市': [
+      { name: char1, role: '主角', desc: `在都市中奋斗的角色${charHints[0] ? '——' + char1 : ''}，面对${text.includes('债') ? '债务压力和生活困境' : '职场和生活的双重压力'}，展现出坚韧和智慧。` },
+      { name: char2, role: '重要角色', desc: `与${char1}产生交集的关键人物${charHints[1] ? '——' + char2 : ''}，在故事中扮演着支持者或对手的角色。` },
+      { name: '配角', role: '配角', desc: '推动剧情发展的重要配角，在关键时刻提供情感支持或制造转折。' }
+    ],
+    '甜宠': [
+      { name: char1, role: '主角', desc: `故事的核心角色${charHints[0] ? '——' + char1 : ''}，性格独立但内心柔软。在与对方的互动中逐渐展现出不同的一面。` },
+      { name: char2, role: '主角', desc: `与${char1}产生化学反应的角色${charHints[1] ? '——' + char2 : ''}，外表${hasMale ? '高冷但内心温柔' : '温柔但内心坚强'}，只对对方展现出不同的一面。` },
+      { name: '助攻/好友', role: '配角', desc: '推动感情线发展的重要助攻角色，经常制造各种有趣的局面。' }
+    ],
+    '悬疑': [
+      { name: char1, role: '主角', desc: `故事的核心调查者${charHints[0] ? '——' + char1 : ''}，思维敏锐、观察力超群。执着于追寻真相，即使面对危险也不退缩。` },
+      { name: char2, role: '关键角色', desc: `与案件有着复杂关联的角色${charHints[1] ? '——' + char2 : ''}，身份的多重性是故事的关键转折点。` },
+      { name: '关联人', role: '配角', desc: '掌握着关键线索的案件关联者，推动故事走向真相。' }
+    ],
+    '武侠': [
+      { name: char1, role: '主角', desc: `${charHints[0] || '侠客主角'}，${text.includes('行侠') ? '行侠仗义、嫉恶如仇' : '初入江湖、潜力无限'}。在江湖历练中逐渐成长，秉持正义之心。` },
+      { name: char2, role: '重要角色', desc: `与${char1}有着复杂情感纠葛的角色${charHints[1] ? '——' + char2 : ''}，在江湖纷争中与主角并肩或对立。` },
+      { name: '江湖前辈', role: '配角', desc: '江湖中德高望重的前辈，知晓武林秘辛，在关键时刻为主角指点迷津。' }
+    ],
+    '古风': [
+      { name: char1, role: '主角', desc: `在古代社会中努力生存的角色${charHints[0] ? '——' + char1 : ''}，有着超越时代的思想和智慧。在权力漩涡中保持本心。` },
+      { name: char2, role: '重要角色', desc: `与${char1}命运交织的关键人物${charHints[1] ? '——' + char2 : ''}，在朝堂或家族中展开博弈。` },
+      { name: '忠心侍从', role: '配角', desc: '对主角忠心耿耿的角色，在危险时刻挺身而出。' }
+    ],
+    '家庭伦理': [
+      { name: char1, role: '主角', desc: `家庭中的关键成员${charHints[0] ? '——' + char1 : ''}，在家庭矛盾中努力寻找平衡点。` },
+      { name: char2, role: '重要角色', desc: `与${char1}关系密切的家庭成员${charHints[1] ? '——' + char2 : ''}，在矛盾中扮演着调解者或参与者的角色。` },
+      { name: '长辈', role: '配角', desc: '有着传统观念的家庭长辈，与年轻一代存在代际冲突，但内心深处充满对家人的爱。' }
+    ],
+    '奇幻': [
+      { name: char1, role: '主角', desc: `故事的核心角色${charHints[0] ? '——' + char1 : ''}，因一次意外获得了${text.includes('变成人类') ? '人类的形态' : '非凡的能力'}。性格中保留着${text.includes('猫') ? '猫的敏锐和独立' : text.includes('狗') ? '狗的忠诚和热情' : '原本的纯真本性'}，同时逐渐学会以新身份面对世界。成长弧线从适应新身份到找到自我价值。` },
+      { name: char2, role: '重要角色', desc: `与${char1}命运交汇的关键人物${charHints[1] ? '——' + char2 : ''}${text.includes('躲债') ? '，因父亲的债务而四处躲避，看似半吊子实则内心善良' : '，在故事中与主角产生了奇妙的化学反应'}。两人之间的反差和互补是故事的核心看点。` },
+      { name: '配角/对手', role: '配角', desc: `推动剧情发展的关键角色，可能是${text.includes('债') ? '追债人、债主或意外卷入的路人' : '知晓主角秘密的旁观者或神秘力量的来源'}，在关键时刻制造转折。` }
+    ]
+  };
+  return chars[genre] || chars['奇幻'];
+}
+
+function generateConflicts(genre, text) {
+  // Extract key plot elements from user input
+  const plotElements = [];
+  const plotPatterns = [
+    /(.{4,20}?)(?:因此|从而|从此|然后|又|碰见|遇见|遇到)/,
+    /(?:意外|突然|不料)(.{4,20}?)/,
+    /(?:变成|化为|化形|变身)(.{2,15}?)(?:的|，|。|$)/,
+    /(?:躲|逃|跑)(?:债|避|开)(.{2,15}?)/,
+    /(?:和|与)(.{2,10}?)(?:之间|碰撞|产生)/
+  ];
+  for (const p of plotPatterns) {
+    const m = text.match(p);
+    if (m && m[1] && m[1].trim().length >= 2) plotElements.push(m[1].trim());
+  }
+  
+  const elem1 = plotElements[0] || '核心事件';
+  const elem2 = plotElements[1] || '关键转折';
+  const elem3 = plotElements[2] || '意外发现';
+  
+  const conflicts = {
+    '玄幻': [
+      { title: '身份危机', desc: `${elem1}引发的连锁反应，让主角不得不面对身份暴露的风险。是隐藏实力还是展露锋芒？` },
+      { title: '力量觉醒', desc: `${elem2}触发了主角体内沉睡的力量，但失控的力量可能伤害身边的人。` },
+      { title: '终极对决', desc: '反派势力发动总攻，主角必须在力量尚未完全掌控的情况下做出关乎所有人命运的选择。' }
+    ],
+    '都市': [
+      { title: '现实困境', desc: `${elem1}让主角陷入了进退两难的境地，理想与现实的差距越来越大。` },
+      { title: '关系考验', desc: `${elem2}让主角与重要角色之间的关系产生了裂痕，信任面临考验。` },
+      { title: '命运抉择', desc: '在事业、感情、家庭之间，主角必须做出一个改变人生轨迹的决定。' }
+    ],
+    '甜宠': [
+      { title: '误会产生', desc: `${elem1}导致双方产生了误解，甜蜜的关系出现了裂痕。` },
+      { title: '外部阻力', desc: `${elem2}成为了两人之间的障碍，来自家庭或社会的压力让感情经受考验。` },
+      { title: '真心告白', desc: '在误会解除后，主角终于鼓起勇气表达真心，迎来感情的高潮时刻。' }
+    ],
+    '悬疑': [
+      { title: '线索浮现', desc: `${elem1}揭示了案件的关键线索，但同时也引出了更深的谜团。` },
+      { title: '真相反转', desc: `${elem2}彻底推翻了之前的推理，真凶的身份出人意料。` },
+      { title: '终极对决', desc: '在与真凶的最终对峙中，主角发现了案件背后隐藏的更大秘密。' }
+    ],
+    '武侠': [
+      { title: '江湖纷争', desc: `${elem1}将主角卷入了江湖纷争的漩涡，不得不在各方势力之间周旋。` },
+      { title: '恩怨纠葛', desc: `${elem2}揭开了尘封的江湖恩怨，主角发现自己的身世与这一切有着千丝万缕的联系。` },
+      { title: '正邪对决', desc: '在武林大会上，主角面对正邪之间的终极抉择，一念之间决定江湖格局。' }
+    ],
+    '古风': [
+      { title: '权力博弈', desc: `${elem1}让主角卷入了朝堂的权力斗争，每一步都如履薄冰。` },
+      { title: '身份危机', desc: `${elem2}让主角的真实身份面临暴露的风险，一旦暴露将万劫不复。` },
+      { title: '命运抉择', desc: '在个人安危与家国大义之间，主角做出了改变历史走向的决定。' }
+    ],
+    '家庭伦理': [
+      { title: '代际冲突', desc: `${elem1}引发了家庭成员之间的激烈矛盾，传统观念与现代生活方式正面碰撞。` },
+      { title: '情感危机', desc: `${elem2}让家庭关系雪上加霜，信任和理解面临前所未有的考验。` },
+      { title: '和解与成长', desc: '在一次意外事件中，家庭成员终于放下了成见，找到了理解与包容的力量。' }
+    ],
+    '奇幻': [
+      { title: '身份暴露危机', desc: `${elem1}让主角的${text.includes('变成人类') ? '真实身份（猫）面临暴露的风险' : '秘密面临暴露的风险'}。一旦被发现，将失去来之不易的${text.includes('变成人类') ? '人类生活' : '平静生活'}。` },
+      { title: '情感纠葛', desc: `${elem2}让主角与${plotElements.length > 0 ? '身边人' : '重要角色'}之间的关系变得复杂。${text.includes('躲债') ? '在躲避债主的路上，两人之间擦出了意想不到的火花' : '在奇幻与现实之间，感情经受了独特考验'}。` },
+      { title: '终极抉择', desc: `${elem3 || '面对最终的考验'}，主角必须在${text.includes('变成人类') ? '永远做人类和恢复原形' : '拥有非凡能力和回归平凡'}之间做出选择。这个决定将改变所有人的命运。` }
+    ]
+  };
+  return conflicts[genre] || conflicts['奇幻'];
+}
+
+function generateAudience(genre) {
+  const audiences = {
+    '玄幻': ['核心受众：18-35岁男性，喜欢修仙升级类内容', '次级受众：对东方玄幻世界观感兴趣的泛用户', '付费意愿：较高，愿意为优质内容付费', '互动偏好：喜欢讨论修炼体系和角色实力排名', '观看时段：晚间8-11点为高峰期'],
+    '都市': ['核心受众：22-40岁都市白领，有职场经历', '次级受众：对都市生活感兴趣的学生群体', '情感共鸣：职场压力、生活困境是核心共鸣点', '分享意愿：容易引发"这就是我"的共鸣转发', '观看时段：通勤时间和午休时间为高峰'],
+    '甜宠': ['核心受众：16-30岁女性，喜欢甜蜜恋爱内容', '次级受众：需要治愈内容的广泛用户群体', '互动偏好：喜欢在评论区嗑CP、讨论剧情', '完播率：甜宠类内容完播率普遍较高', '观看时段：全天均匀分布，晚间略高'],
+    '悬疑': ['核心受众：20-40岁，喜欢烧脑推理内容', '次级受众：对悬疑题材好奇的泛用户', '互动偏好：喜欢在评论区推理分析、讨论剧情', '复看率：悬疑类内容复看率较高', '观看时段：夜间观看比例较高'],
+    '武侠': ['核心受众：25-45岁，有武侠情怀的男性用户', '次级受众：对传统文化和武术感兴趣的年轻用户', '情感共鸣：江湖义气和侠义精神是核心吸引力', '分享意愿：优质武侠内容容易引发情怀共鸣', '观看时段：晚间和周末为高峰期'],
+    '古风': ['核心受众：18-35岁女性，喜欢古代言情和历史', '次级受众：对古风文化和传统美学感兴趣的泛用户', '审美需求：对服化道和场景美学要求较高', '互动偏好：喜欢讨论角色关系和历史背景', '观看时段：晚间8-10点为高峰期'],
+    '家庭伦理': ['核心受众：30-55岁，有家庭生活经验的用户', '次级受众：对家庭关系话题感兴趣的年轻用户', '情感共鸣：家庭矛盾和亲情是核心共鸣点', '分享意愿：容易引发家庭话题讨论', '观看时段：晚间黄金时段为主'],
+    '奇幻': ['核心受众：16-35岁，喜欢奇幻/变身类内容的广泛用户', '次级受众：对动物拟人、异世界题材感兴趣的泛用户', '情感共鸣：身份认同、自我发现是核心共鸣点', '互动偏好：喜欢讨论设定细节和角色关系', '观看时段：全天均匀分布，晚间略高']
+  };
+  return audiences[genre] || audiences['奇幻'];
+}
+
+// ============================================================
+// STEP 2: 故事策划
+// ============================================================
+function prefillStep2() {
+  const sel = document.getElementById('genreSelect');
+  sel.innerHTML = '';
+  for (const g of Object.keys(GENRES)) {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    if (g === state.genre) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  document.getElementById('storyDesc2').value = state.storyText;
+  sel.onchange = () => { state.genre = sel.value; };
+}
+
+function generatePlan() {
+  state.genre = document.getElementById('genreSelect').value;
+  state.storyText = document.getElementById('storyDesc2').value;
+  state.duration = parseInt(document.querySelector('#durationGroup .radio-card.selected')?.dataset.value || 180);
+  state.videoModel = document.getElementById('videoModel').value;
+  state.maxClipDur = parseInt(document.getElementById('maxClipDur').value) || 5;
+
+  const genreData = GENRES[state.genre];
+  const multiplier = genreData ? genreData.multiplier : 1.0;
+
+  // Real calculations
+  const baseShotDuration = state.maxClipDur;
+  const baseShots = Math.max(8, Math.floor(state.duration / baseShotDuration));
+
+  // Complexity factors
+  const textLen = state.storyText.length;
+  const textLengthBonus = Math.min(0.3, textLen / 500);
+  const conflicts = state.analysisResult ? generateConflicts(state.genre, state.storyText).length : 3;
+  const keyScenes = Math.max(3, Math.floor(state.duration / 30));
+  const complexity = Math.min(1, conflicts * 0.1 + keyScenes * 0.08 + textLengthBonus);
+
+  const finalShots = Math.floor(baseShots * (1 + complexity * 0.5) * multiplier);
+
+  // Four-act distribution
+  const act1 = Math.floor(finalShots * 0.25);
+  const act2 = Math.floor(finalShots * 0.25);
+  const act3 = Math.floor(finalShots * 0.25);
+  const act4 = finalShots - act1 - act2 - act3;
+
+  // Shot durations
+  const shots = [];
+  let currentAct = 1;
+  const actCounts = [0, act1, act2, act3, act4];
+  for (let i = 0; i < finalShots; i++) {
+    if (i >= act1 + act2 + act3) currentAct = 4;
+    else if (i >= act1 + act2) currentAct = 3;
+    else if (i >= act1) currentAct = 2;
+    else currentAct = 1;
+    const dur = currentAct === 3 ? Math.min(state.maxClipDur + 2, 8) :
+                currentAct === 1 ? Math.max(2, state.maxClipDur - 1) : state.maxClipDur;
+    shots.push({ num: i + 1, act: currentAct, duration: dur });
+  }
+
+  const totalDuration = shots.reduce((s, sh) => s + sh.duration, 0);
+
+  // Rhythm config
+  const rhythm = {
+    act1: { name: '起（铺垫）', shots: act1, pace: '缓慢', desc: '建立世界观，介绍角色，铺设伏笔' },
+    act2: { name: '承（发展）', shots: act2, pace: '中等', desc: '推进剧情，深化角色关系，制造小冲突' },
+    act3: { name: '转（高潮）', shots: act3, pace: '快速', desc: '核心冲突爆发，情节急转直下，情感爆发' },
+    act4: { name: '合（收尾）', shots: act4, pace: '中速', desc: '解决冲突，情感升华，留下悬念或圆满收尾' }
+  };
+
+  state.planResult = { finalShots, shots, totalDuration, complexity, rhythm, actCounts: [act1, act2, act3, act4] };
+
+  // Character bible
+  const characters = state.analysisResult ? generateCharacters(state.genre, state.storyText) : generateCharacters(state.genre, '');
+
+  // Render
+  const container = document.getElementById('planResult');
+  container.innerHTML = `
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>📊 策划方案概览</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light)" class="font-display">${finalShots}</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">总镜头数</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light)" class="font-display">${totalDuration}s</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">预估总时长</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light)" class="font-display">${Math.round(complexity * 100)}%</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">复杂度</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.5rem;font-weight:700;color:var(--accent-light)" class="font-display">${multiplier}x</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">题材系数</div>
+          </div>
+        </div>
+        <div style="font-size:.82rem;color:var(--text-muted)">
+          计算公式：基础镜头 = max(8, ${state.duration}/${baseShotDuration}) = ${baseShots}，
+          复杂度 = min(1, ${conflicts}×0.1 + ${keyScenes}×0.08 + ${textLengthBonus.toFixed(2)}) = ${complexity.toFixed(2)}，
+          最终镜头 = floor(${baseShots} × (1 + ${complexity.toFixed(2)} × 0.5) × ${multiplier}) = ${finalShots}
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>🎬 四幕结构 & 时间线</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <table class="data-table" style="margin-bottom:16px">
+          <thead><tr><th>幕</th><th>名称</th><th>镜头数</th><th>节奏</th><th>说明</th></tr></thead>
+          <tbody>
+            ${Object.entries(rhythm).map(([key, r]) => `
+              <tr><td style="color:var(--accent-light);font-weight:600">第${key.replace('act','')}幕</td><td>${r.name}</td><td class="font-display" style="font-weight:600">${r.shots}</td><td><span class="badge ${r.pace==='快速'?'badge-red':r.pace==='缓慢'?'badge-green':'badge-yellow'}">${r.pace}</span></td><td>${r.desc}</td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:8px">镜头时间线：</div>
+        <div class="timeline">
+          ${shots.map((s, i) => `
+            <div class="shot-block act${s.act}" title="镜头${s.num} | 第${s.act}幕 | ${s.duration}s">
+              <div class="shot-num">${s.num}</div>
+              <div class="shot-dur">${s.duration}s</div>
+            </div>
+            ${i < shots.length - 1 ? '<div class="transition-mark">→</div>' : ''}
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header" onclick="this.classList.toggle('open')">
+        <h4>👤 角色圣经</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body">${characters.map(c => `
+        <div style="margin-bottom:12px;padding:12px;background:var(--bg-primary);border-radius:var(--radius)">
+          <strong style="color:var(--text-primary)">${c.name}</strong>
+          <span class="badge badge-purple" style="margin-left:8px">${c.role}</span>
+          <p style="margin-top:6px">${c.desc}</p>
+        </div>`).join('')}</div>
+    </div>
+  `;
+}
+
+// ============================================================
+// STEP 3: 素材生成
+// ============================================================
+function generateAssets() {
+  if (!state.planResult) {
+    alert('请先完成故事策划（第2步）');
+    return;
+  }
+  if (!state.visualStyle || !state.audioStyle) {
+    alert('请选择视觉风格和音频风格');
+    return;
+  }
+
+  const vs = VISUAL_STYLES[state.visualStyle];
+  const as = AUDIO_STYLES[state.audioStyle];
+  const shots = state.planResult.shots;
+  const genre = state.genre;
+
+  // Generate per-shot asset list
+  const shotDescriptions = {
+    1: ['开场远景，展现故事世界观', '主角出场特写，建立角色形象', '环境空镜，营造氛围'],
+    2: ['角色互动场景，推进关系发展', '关键道具或线索出现', '场景转换，进入新环境'],
+    3: ['冲突爆发的高潮场景', '角色情感爆发的特写', '关键动作或事件发生'],
+    4: ['结局场景，情感收束', '角色最终状态展示', '留白或悬念结尾']
+  };
+
+  const moodMap = { 1: '平静/铺垫', 2: '发展/波动', 3: '紧张/激烈', 4: '舒缓/升华' };
+  const audioMoodMap = { 1: '轻柔引入', 2: '节奏渐强', 3: '高潮爆发', 4: '渐弱收尾' };
+
+  const assets = shots.map(shot => {
+    const actDescs = shotDescriptions[shot.act] || shotDescriptions[1];
+    const desc = actDescs[shot.num % actDescs.length];
+    const visualPrompt = `${vs.prompt}，${desc}，${moodMap[shot.act]}氛围，镜头${shot.num}`;
+    const audioPrompt = `${as.name}，${audioMoodMap[shot.act]}，${shot.duration}秒`;
+    return { ...shot, desc, visualPrompt, audioPrompt, mood: moodMap[shot.act] };
+  });
+
+  state.assetResult = { assets, visualStyle: vs, audioStyle: as };
+
+  const container = document.getElementById('assetResult');
+  container.innerHTML = `
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>🎨 素材清单概览</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);flex:1;min-width:200px">
+            <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:4px">视觉风格</div>
+            <div style="font-weight:600">${vs.name}</div>
+            <div style="font-size:.78rem;color:var(--text-secondary);margin-top:4px">配色：${vs.colors.join(' / ')}</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);flex:1;min-width:200px">
+            <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:4px">音频风格</div>
+            <div style="font-weight:600">${as.name}</div>
+            <div style="font-size:.78rem;color:var(--text-secondary);margin-top:4px">${as.instruments}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>📋 逐镜头素材清单（共 ${assets.length} 个镜头）</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr><th>镜头</th><th>幕</th><th>时长</th><th>画面描述</th><th>视觉提示词</th><th>音频提示词</th><th>情绪</th></tr></thead>
+            <tbody>
+              ${assets.map(a => `
+                <tr>
+                  <td class="font-display" style="font-weight:600;color:var(--accent-light)">#${a.num}</td>
+                  <td><span class="badge badge-purple">第${a.act}幕</span></td>
+                  <td class="font-display">${a.duration}s</td>
+                  <td style="max-width:150px">${a.desc}</td>
+                  <td style="max-width:200px;font-size:.78rem">${a.visualPrompt}</td>
+                  <td style="max-width:150px;font-size:.78rem">${a.audioPrompt}</td>
+                  <td><span class="badge ${a.act===3?'badge-red':a.act===1?'badge-green':'badge-yellow'}">${a.mood}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// STEP 4: 剪辑合成
+// ============================================================
+function generateEditPlan() {
+  if (!state.planResult) {
+    alert('请先完成故事策划（第2步）');
+    return;
+  }
+
+  state.autoTrans = document.getElementById('autoTransToggle').classList.contains('on');
+  state.defaultTransition = document.getElementById('defaultTransition').value;
+  state.quality = document.querySelector('#qualityGroup .radio-card.selected')?.dataset.value || 'standard';
+  state.subtitleOn = document.getElementById('subtitleToggle').classList.contains('on');
+  state.fontSize = document.getElementById('fontSize').value;
+
+  const shots = state.planResult.shots;
+  const qp = QUALITY_PRESETS[state.quality];
+  const totalDuration = state.planResult.totalDuration;
+
+  // Generate transitions
+  const transKeys = Object.keys(TRANSITIONS);
+  const transitions = [];
+  for (let i = 0; i < shots.length - 1; i++) {
+    let trans;
+    if (state.autoTrans) {
+      // Auto-select based on mood change
+      const moodChange = Math.abs(shots[i].act - shots[i + 1].act);
+      if (moodChange >= 2) trans = 'glitch';
+      else if (moodChange === 1) trans = 'blur';
+      else if (shots[i + 1].act === 3) trans = 'zoom-in';
+      else if (shots[i].act === 3 && shots[i + 1].act === 4) trans = 'fade';
+      else trans = 'dissolve';
+    } else {
+      trans = state.defaultTransition;
+    }
+    transitions.push(trans);
+  }
+
+  // File size estimation
+  const bitrate = qp.bitrate;
+  const fileSizeMB = (totalDuration * bitrate / 8).toFixed(1);
+
+  // Generate SRT
+  let srtContent = '';
+  let timeOffset = 0;
+  const sampleSubtitles = [
+    '在这个世界里，一切皆有可能...',
+    '你准备好了吗？',
+    '命运的车轮已经开始转动',
+    '我不会再退缩了',
+    '这就是真相吗...',
+    '我相信你',
+    '一切才刚刚开始',
+    '未来，由我们自己书写'
+  ];
+  shots.forEach((shot, i) => {
+    const start = formatSRTTime(timeOffset);
+    const end = formatSRTTime(timeOffset + shot.duration);
+    const text = sampleSubtitles[i % sampleSubtitles.length];
+    srtContent += `${i + 1}\n${start} --> ${end}\n${text}\n\n`;
+    timeOffset += shot.duration;
+  });
+
+  state.editResult = { transitions, totalDuration, fileSizeMB, srtContent, shots };
+  const container = document.getElementById('editResult');
+  container.innerHTML = `
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>🎞️ 剪辑方案概览</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--accent-light)" class="font-display">${qp.name}</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">画质预设</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--accent-light)" class="font-display">${qp.bitrate}Mbps</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">视频码率</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--accent-light)" class="font-display">${fileSizeMB}MB</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">预估文件大小</div>
+          </div>
+          <div style="padding:12px;background:var(--bg-primary);border-radius:var(--radius);text-align:center">
+            <div style="font-size:1.3rem;font-weight:700;color:var(--accent-light)" class="font-display">${state.subtitleOn ? '开' : '关'}</div>
+            <div style="font-size:.78rem;color:var(--text-muted)">字幕</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>📐 时间线可视化</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div class="export-timeline">
+          ${shots.map((s, i) => `
+            <div class="et-shot" style="border-top:3px solid ${s.act===1?'#7c3aed':s.act===2?'#3b82f6':s.act===3?'#f59e0b':'#10b981'}">
+              <div class="et-num">#${s.num}</div>
+              <div>${s.duration}s</div>
+            </div>
+            ${i < shots.length - 1 ? `<div class="et-trans">${TRANSITIONS[transitions[i]] || '淡入淡出'}</div>` : ''}
+          `).join('')}
+        </div>
+        <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--text-muted)"><div style="width:12px;height:3px;background:#7c3aed;border-radius:2px"></div>第1幕</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--text-muted)"><div style="width:12px;height:3px;background:#3b82f6;border-radius:2px"></div>第2幕</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--text-muted)"><div style="width:12px;height:3px;background:#f59e0b;border-radius:2px"></div>第3幕</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--text-muted)"><div style="width:12px;height:3px;background:#10b981;border-radius:2px"></div>第4幕</div>
+        </div>
+      </div>
+    </div>
+
+    ${state.subtitleOn ? `
+    <div class="result-card animate-in">
+      <div class="result-header" onclick="this.classList.toggle('open')">
+        <h4>💬 SRT 字幕预览</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body">
+        <div class="srt-preview">${escapeHtml(srtContent)}</div>
+      </div>
+    </div>` : ''}
+  `;
+  // Auto-advance to step 5 after generating edit plan
+  setTimeout(() => goToStep(5), 300);
+}
+
+function formatSRTTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const ms = Math.floor((seconds % 1) * 1000);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ============================================================
+// STEP 5: 导出成片
+// ============================================================
+function updateExportTitleCount() {
+  const title = document.getElementById('exportTitle').value;
+  state.title = title;
+  const platform = state.platform ? PLATFORMS[state.platform] : null;
+  const limit = platform ? platform.titleLimit : 55;
+  const countEl = document.getElementById('titleCharCount');
+  countEl.textContent = title.length + ' / ' + limit + '字';
+  countEl.classList.toggle('over', title.length > limit);
+}
+
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const input = e.target;
+    const tag = input.value.trim().replace(/^#/, '');
+    if (!tag) return;
+    if (state.tags.length >= 10) { alert('最多添加10个标签'); return; }
+    if (state.tags.includes(tag)) { input.value = ''; return; }
+    state.tags.push(tag);
+    input.value = '';
+    renderTags();
+  }
+}
+
+function removeTag(index) {
+  state.tags.splice(index, 1);
+  renderTags();
+}
+
+function renderTags() {
+  const wrap = document.getElementById('tagInputWrap');
+  const input = document.getElementById('tagInput');
+  wrap.querySelectorAll('.tag').forEach(t => t.remove());
+  state.tags.forEach((tag, i) => {
+    const el = document.createElement('span');
+    el.className = 'tag';
+    el.innerHTML = `#${tag} <span class="tag-remove" onclick="removeTag(${i})">×</span>`;
+    wrap.insertBefore(el, input);
+  });
+  document.getElementById('tagCharCount').textContent = state.tags.length + ' / 10 个标签';
+  document.getElementById('tagCharCount').classList.toggle('over', state.tags.length > 10);
+}
+
+function autoSuggestTags() {
+  const genre = state.genre || '都市';
+  const genreTags = {
+    '玄幻': ['修仙', '玄幻', '仙侠', '逆袭', '爽文', '升级', '飞升', '仙帝', '炼丹', '法宝'],
+    '都市': ['都市', '职场', '逆袭', '创业', '现代', '白领', '商战', '打脸', '重生', '奋斗'],
+    '甜宠': ['甜宠', '恋爱', '霸总', '甜剧', '撒糖', 'CP', '暗恋', '告白', '浪漫', '甜蜜'],
+    '悬疑': ['悬疑', '推理', '破案', '烧脑', '反转', '真相', '惊悚', '侦探', '密室', '凶手'],
+    '武侠': ['武侠', '江湖', '武林', '侠客', '功夫', '剑法', '门派', '大侠', '武侠剧', '江湖恩怨'],
+    '古风': ['古风', '古代', '宫廷', '王爷', '古装', '穿越', '宫斗', '皇后', '帝王', '古言'],
+    '家庭伦理': ['家庭', '伦理', '婆媳', '亲情', '生活', '家庭剧', '情感', '婚姻', '治愈', '现实']
+  };
+  const suggestions = genreTags[genre] || genreTags['都市'];
+  // Add tags that aren't already there
+  let added = 0;
+  for (const tag of suggestions) {
+    if (state.tags.length >= 10) break;
+    if (!state.tags.includes(tag)) {
+      state.tags.push(tag);
+      added++;
+    }
+  }
+  renderTags();
+}
+
+function generateExportPlan() {
+  if (!state.platform) {
+    alert('请选择目标平台');
+    return;
+  }
+
+  state.title = document.getElementById('exportTitle').value;
+  state.desc = document.getElementById('exportDesc').value;
+
+  const platform = PLATFORMS[state.platform];
+  const qp = QUALITY_PRESETS[state.quality] || QUALITY_PRESETS.standard;
+  const totalDuration = state.planResult ? state.planResult.totalDuration : 0;
+  const fileSizeMB = state.editResult ? state.editResult.fileSizeMB : ((totalDuration * qp.bitrate / 8)).toFixed(1);
+
+  // Quality checks
+  const checks = [
+    { name: '分辨率', expected: `${platform.width}×${platform.height}`, actual: `${platform.width}×${platform.height}`, pass: true },
+    { name: '视频码率', expected: `≤${platform.bitrate}Mbps`, actual: `${qp.bitrate}Mbps`, pass: qp.bitrate <= platform.bitrate },
+    { name: '视频时长', expected: `≤${platform.maxDur}秒`, actual: `${totalDuration}秒`, pass: totalDuration <= platform.maxDur },
+    { name: '标题长度', expected: `≤${platform.titleLimit}字`, actual: `${state.title.length}字`, pass: state.title.length <= platform.titleLimit },
+    { name: '标签数量', expected: `≤${platform.tagLimit}个`, actual: `${state.tags.length}个`, pass: state.tags.length <= platform.tagLimit },
+    { name: '宽高比', expected: platform.ratio, actual: platform.ratio, pass: true }
+  ];
+
+  const allPass = checks.every(c => c.pass);
+
+  // Auto hashtags
+  const hashtags = state.tags.map(t => `#${t}`).join(' ');
+  const extraHashtags = ['漫剧', 'AI创作', '短剧', state.genre].filter(t => !state.tags.includes(t)).map(t => `#${t}`).join(' ');
+
+  // Export manifest
+  const manifest = {
+    platform: platform.name,
+    resolution: `${platform.width}×${platform.height}`,
+    ratio: platform.ratio,
+    codec: 'H.264',
+    container: 'MP4',
+    videoBitrate: `${qp.bitrate}Mbps`,
+    audioBitrate: '128kbps',
+    audioCodec: 'AAC',
+    fps: 30,
+    duration: `${totalDuration}秒`,
+    estimatedSize: `${fileSizeMB}MB`,
+    quality: qp.name,
+    title: state.title || '(未填写)',
+    description: state.desc || '(未填写)',
+    tags: state.tags,
+    subtitle: state.subtitleOn ? `开启 (${state.fontSize})` : '关闭'
+  };
+
+  state.exportResult = { checks, allPass, manifest, hashtags, extraHashtags };
+
+  const container = document.getElementById('exportResult');
+  container.innerHTML = `
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>✅ 质量检查</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px;background:${allPass?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)'};border-radius:var(--radius)">
+          <span style="font-size:1.5rem">${allPass ? '🎉' : '⚠️'}</span>
+          <div>
+            <div style="font-weight:600;color:${allPass?'var(--success)':'var(--error)'}">${allPass ? '全部通过' : '存在问题'}</div>
+            <div style="font-size:.82rem;color:var(--text-secondary)">${allPass ? '所有技术指标均符合平台要求，可以安全发布' : '部分指标不符合平台要求，请调整后重试'}</div>
+          </div>
+        </div>
+        ${checks.map(c => `
+          <div class="quality-item">
+            <div class="quality-dot ${c.pass?'pass':'fail'}"></div>
+            <span style="flex:1">${c.name}</span>
+            <span style="color:var(--text-muted);font-size:.82rem">${c.actual}</span>
+            <span style="color:${c.pass?'var(--success)':'var(--error)'};font-size:.82rem;font-weight:500;margin-left:8px">${c.pass?'PASS':'FAIL'}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header open" onclick="this.classList.toggle('open')">
+        <h4>📦 导出清单</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body" style="display:block">
+        <table class="data-table">
+          <tbody>
+            ${Object.entries(manifest).map(([key, val]) => `
+              <tr><td style="font-weight:500;color:var(--text-primary);width:120px">${key === 'platform' ? '平台' : key === 'resolution' ? '分辨率' : key === 'ratio' ? '宽高比' : key === 'codec' ? '视频编码' : key === 'container' ? '容器格式' : key === 'videoBitrate' ? '视频码率' : key === 'audioBitrate' ? '音频码率' : key === 'audioCodec' ? '音频编码' : key === 'fps' ? '帧率' : key === 'duration' ? '时长' : key === 'estimatedSize' ? '预估大小' : key === 'quality' ? '画质' : key === 'title' ? '标题' : key === 'description' ? '描述' : key === 'tags' ? '标签' : key === 'subtitle' ? '字幕' : key}</td><td>${Array.isArray(val) ? val.map(v => `<span class="badge badge-purple" style="margin:2px">${v}</span>`).join('') : val}</td></tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="result-card animate-in">
+      <div class="result-header" onclick="this.classList.toggle('open')">
+        <h4>🏷️ 推荐话题标签</h4>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="result-body">
+        <p style="margin-bottom:8px"><strong>已选标签：</strong></p>
+        <p style="color:var(--accent-light);margin-bottom:12px">${hashtags || '(无)'}</p>
+        <p style="margin-bottom:8px"><strong>推荐追加：</strong></p>
+        <p style="color:var(--text-secondary)">${extraHashtags}</p>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+// VIEW 2: 技能库
+// ============================================================
+function renderSkills() {
+  const grid = document.getElementById('skillsGrid');
+  const search = document.getElementById('skillSearch').value.toLowerCase();
+  const filter = document.querySelector('#skillFilterTabs .filter-tab.active')?.dataset.filter || 'all';
+
+  let filtered = SKILLS_DATA;
+  if (filter !== 'all') filtered = filtered.filter(s => s.category === filter);
+  if (search) filtered = filtered.filter(s =>
+    s.name.toLowerCase().includes(search) ||
+    s.desc.toLowerCase().includes(search) ||
+    s.triggers.some(t => t.toLowerCase().includes(search))
+  );
+
+  grid.innerHTML = filtered.map(s => `
+    <div class="skill-card" onclick="this.classList.toggle('expanded')">
+      <div class="skill-header">
+        <span class="skill-icon">${s.icon}</span>
+        <span class="skill-name">${s.name}</span>
+        <span class="badge badge-purple">${s.version}</span>
+      </div>
+      <div class="skill-desc">${s.desc}</div>
+      <div class="skill-tags">
+        ${s.triggers.map(t => `<span class="skill-tag">${t}</span>`).join('')}
+      </div>
+      <div class="skill-detail">
+        <div style="font-size:.82rem;font-weight:500;color:var(--text-primary);margin-bottom:8px">核心能力：</div>
+        <ul style="padding-left:18px;font-size:.82rem;color:var(--text-secondary);line-height:1.8">
+          ${s.capabilities.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+        <div style="margin-top:10px">
+          <span class="badge ${s.category==='core'?'badge-purple':s.category==='ops'?'badge-yellow':'badge-green'}">${s.category==='core'?'核心创作':s.category==='ops'?'运营工具':'通用工具'}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterSkills() { renderSkills(); }
+
+function filterSkillCategory(cat, el) {
+  document.querySelectorAll('#skillFilterTabs .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderSkills();
+}
+
+// ============================================================
+// VIEW 3: 风格配置
+// ============================================================
+function renderStyleConfig() {
+  // Visual styles
+  const vg = document.getElementById('styleVisualGrid');
+  vg.innerHTML = Object.entries(VISUAL_STYLES).map(([key, s]) => `
+    <div class="style-card" style="cursor:default">
+      <div class="style-name">${s.name}</div>
+      <div class="style-desc">适用：${s.genres.join(' / ')}</div>
+      <div class="style-colors">
+        ${s.colors.map(c => `<div class="color-dot" style="background:${c === '朱红'?'#c23b22':c === '靛蓝'?'#3b5998':c === '明黄'?'#daa520':c === '墨黑'?'#1a1a1a':c === '鲜艳'?'#ff6b9d':c === '高饱和'?'#c084fc':c === '明亮'?'#60a5fa':c === '自然真实'?'#8b7355':c === '电影色调'?'#708090':c === '低饱和'?'#2f4f4f':c === '明亮活泼'?'#ff8c42':c === '高对比'?'#ffd166':c === '水墨'?'#2c2c2c':c === '留白'?'#8b8b8b':c === '淡彩'?'#d4c5a9':c}"></div>`).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:.75rem;color:var(--text-muted);line-height:1.5">
+        提示词：${s.prompt}
+      </div>
+    </div>
+  `).join('');
+
+  // Audio styles
+  const ag = document.getElementById('styleAudioGrid');
+  ag.innerHTML = Object.entries(AUDIO_STYLES).map(([key, s]) => `
+    <div class="style-card" style="cursor:default">
+      <div class="style-name">${s.name}</div>
+      <div class="style-desc">${s.instruments}</div>
+      <div style="margin-top:8px;font-size:.75rem;color:var(--text-secondary)">
+        情绪：${s.mood}
+      </div>
+      <div style="margin-top:6px;font-size:.75rem;color:var(--text-muted)">
+        适用：${s.genres.join(' / ')}
+      </div>
+    </div>
+  `).join('');
+
+  // Platforms
+  const pg = document.getElementById('stylePlatformGrid');
+  pg.innerHTML = Object.entries(PLATFORMS).map(([key, p]) => `
+    <div class="platform-card" style="cursor:default">
+      <div class="platform-name">${p.name}</div>
+      <div class="platform-specs">
+        分辨率：<span>${p.width}×${p.height}</span><br>
+        比例：<span>${p.ratio}</span><br>
+        最大时长：<span>${p.maxDur}秒</span><br>
+        码率上限：<span>${p.bitrate}Mbps</span><br>
+        标题限制：<span>≤${p.titleLimit}字</span><br>
+        标签限制：<span>≤${p.tagLimit}个</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  updateStepUI();
+});
+</script>
+</body>
+</html>
