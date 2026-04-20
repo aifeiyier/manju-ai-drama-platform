@@ -259,9 +259,74 @@ select option{background:var(--bg-secondary);color:var(--text-primary)}
 /* ===== SECTION DIVIDER ===== */
 .section-divider{display:flex;align-items:center;gap:12px;margin:28px 0 16px;font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
 .section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ===== API CONFIG PANEL ===== */
+.api-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.api-config-grid{grid-template-columns:1fr}}
+.api-config-grid .form-group{margin-bottom:0}
+.api-config-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+.api-config-card .card-title{margin-bottom:16px}
+.api-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:500}
+.api-status.connected{background:rgba(16,185,129,.15);color:var(--success)}
+.api-status.disconnected{background:rgba(239,68,68,.15);color:var(--error)}
+.api-status .status-dot{width:8px;height:8px;border-radius:50%}
+.api-status.connected .status-dot{background:var(--success)}
+.api-status.disconnected .status-dot{background:var(--error)}
+.api-key-input-wrap{position:relative}
+.api-key-input-wrap input{padding-right:40px}
+.api-key-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.85rem;padding:4px}
+.api-key-toggle:hover{color:var(--text-primary)}
+
+/* ===== AI LOADING ===== */
+.ai-loading{display:flex;align-items:center;gap:12px;padding:20px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin:12px 0}
+.ai-loading .ai-spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.ai-loading .ai-loading-text{font-size:.88rem;color:var(--text-secondary)}
+.ai-loading .ai-loading-text .dots::after{content:'';animation:dots 1.5s steps(4,end) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
+
+/* ===== VIDEO PLAYER ===== */
+.video-player-wrap{background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:12px 0}
+.video-player-wrap video{width:100%;max-height:400px;display:block;background:#000}
+.video-task-info{padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius);margin:8px 0;font-size:.82rem;color:var(--text-secondary);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.video-task-info .task-id{font-family:'Courier New',monospace;color:var(--accent-light);font-size:.78rem}
+.video-task-info .task-status{font-weight:500}
+.video-task-info .task-status.queued{color:var(--warning)}
+.video-task-info .task-status.running{color:var(--accent-light)}
+.video-task-info .task-status.succeeded{color:var(--success)}
+.video-task-info .task-status.failed{color:var(--error)}
+
+/* ===== AUDIO PLAYER ===== */
+.audio-player-wrap{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin:12px 0}
+.audio-player-wrap audio{width:100%;margin-top:8px}
+.audio-player-wrap .audio-label{font-size:.85rem;color:var(--text-secondary);margin-bottom:4px}
+
+/* ===== INLINE BUTTON GROUP ===== */
+.inline-btn-group{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.btn-video{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius);font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-primary);transition:all var(--transition);font-size:.8rem}
+.btn-video:hover{border-color:var(--accent);color:var(--accent-light)}
+.btn-video:disabled{opacity:.5;cursor:not-allowed}
+.btn-video.generating{border-color:var(--warning);color:var(--warning)}
+
+/* ===== TOAST NOTIFICATION ===== */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);font-size:.85rem;color:#fff;animation:toastIn .3s ease;max-width:400px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--error)}
+.toast.info{background:var(--accent)}
+.toast.warning{background:var(--warning)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+
+/* ===== TTS SECTION ===== */
+.tts-section{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-top:16px}
+.tts-section .tts-notice{display:flex;align-items:center;gap:8px;padding:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius);font-size:.82rem;color:var(--warning);margin-bottom:16px}
+.tts-section .tts-notice.hidden{display:none}
 </style>
 </head>
 <body>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- Mobile Toggle -->
 <button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
@@ -284,6 +349,9 @@ select option{background:var(--bg-secondary);color:var(--text-primary)}
     </button>
     <button class="nav-item" data-view="guide" onclick="switchView('guide')">
       <span class="nav-icon">📖</span><span>使用指南</span>
+    </button>
+    <button class="nav-item" data-view="apiconfig" onclick="switchView('apiconfig')">
+      <span class="nav-icon">🔑</span><span>API配置</span>
     </button>
   </nav>
   <div class="sidebar-footer">Manju v1.0 · Powered by AI</div>
@@ -770,6 +838,83 @@ select option{background:var(--bg-secondary);color:var(--text-primary)}
   </div>
 </div>
 
+<!-- ==================== VIEW 5: API配置 ==================== -->
+<div class="view" id="view-apiconfig">
+  <div class="view-header">
+    <h2 class="font-display">API配置</h2>
+    <p>配置火山引擎 ARK API，启用 AI 文本生成、视频生成和语音合成功能</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      🔑 API 密钥
+      <span class="api-status disconnected" id="apiStatusBadge"><span class="status-dot"></span>未连接</span>
+    </div>
+    <div class="form-group">
+      <label>ARK API Key <span class="required">*</span></label>
+      <div class="api-key-input-wrap">
+        <input type="password" id="apiKeyInput" placeholder="输入你的 ARK API Key（从火山引擎控制台获取）">
+        <button class="api-key-toggle" onclick="toggleApiKeyVisibility()" title="显示/隐藏密钥">👁</button>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">密钥仅存储在浏览器本地，不会上传到任何第三方服务器</div>
+    </div>
+  </div>
+
+  <div class="api-config-grid">
+    <div class="api-config-card">
+      <div class="card-title">📝 文本生成模型</div>
+      <div class="form-group">
+        <label>Endpoint ID</label>
+        <input type="text" id="textModelEndpoint" placeholder="doubao-seed-1-6-251015" value="doubao-seed-1-6-251015">
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">用于故事大纲、角色设定、冲突点生成</div>
+      </div>
+    </div>
+
+    <div class="api-config-card">
+      <div class="card-title">🎬 视频生成模型</div>
+      <div class="form-group">
+        <label>视频模型</label>
+        <select id="videoModelEndpoint">
+          <option value="doubao-seedance-1-0-pro-250528">Seedance 1.0 Pro</option>
+          <option value="doubao-seedance-1-0-lite-t2v-250428">Seedance 1.0 Lite</option>
+        </select>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">用于镜头视频素材生成</div>
+      </div>
+    </div>
+
+    <div class="api-config-card">
+      <div class="card-title">🔊 语音合成服务</div>
+      <div class="form-group">
+        <label>TTS Endpoint ID（可选）</label>
+        <input type="text" id="ttsEndpoint" placeholder="留空则不启用语音合成功能">
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">配置后可在剪辑合成步骤中生成旁白语音</div>
+      </div>
+    </div>
+
+    <div class="api-config-card">
+      <div class="card-title">ℹ️ 使用说明</div>
+      <ul style="padding-left:18px;font-size:.82rem;color:var(--text-secondary);line-height:2">
+        <li>API Key 从<a href="https://console.volcengine.com/ark" target="_blank" style="color:var(--accent-light)">火山引擎 ARK 控制台</a>获取</li>
+        <li>Endpoint ID 在 ARK 控制台的「推理接入点」中创建</li>
+        <li>未配置 API Key 时，所有功能使用本地模拟逻辑</li>
+        <li>配置保存后刷新页面不会丢失</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="btn-group" style="margin-top:24px">
+    <button class="btn btn-primary" onclick="saveApiConfig()">
+      <span>💾</span> 保存配置
+    </button>
+    <button class="btn btn-secondary" onclick="testApiConnection()">
+      <span>🔌</span> 测试连接
+    </button>
+    <button class="btn btn-secondary" onclick="clearApiConfig()" style="margin-left:auto">
+      <span>🗑</span> 清除配置
+    </button>
+  </div>
+</div>
+
 </div><!-- /main -->
 
 <script>
@@ -806,7 +951,14 @@ const state = {
   title: '',
   desc: '',
   tags: [],
-  exportResult: null
+  exportResult: null,
+  // API Config
+  apiKey: '',
+  textModelEndpoint: 'doubao-seed-1-6-251015',
+  videoModelEndpoint: 'doubao-seedance-1-0-pro-250528',
+  ttsEndpoint: '',
+  // Video generation tasks
+  videoTasks: {}
 };
 
 // ============================================================
@@ -886,6 +1038,14 @@ function switchView(viewId) {
   document.querySelector('.sidebar').classList.remove('open');
   if (viewId === 'skills') renderSkills();
   if (viewId === 'style') renderStyleConfig();
+  if (viewId === 'apiconfig') {
+    // Refresh API config UI from state
+    document.getElementById('apiKeyInput').value = state.apiKey;
+    document.getElementById('textModelEndpoint').value = state.textModelEndpoint;
+    document.getElementById('videoModelEndpoint').value = state.videoModelEndpoint;
+    document.getElementById('ttsEndpoint').value = state.ttsEndpoint;
+    updateApiStatusBadge();
+  }
 }
 
 // ============================================================
@@ -1061,15 +1221,112 @@ function analyzeTopic() {
   state.analysisResult = { results, text };
   state.genre = results[0].genre;
 
-  // Generate outline
   const topGenre = results[0];
+
+  // Check if API Key is configured for AI generation
+  if (state.apiKey) {
+    analyzeTopicWithAI(topGenre, text, results);
+  } else {
+    analyzeTopicLocal(topGenre, text, results);
+  }
+}
+
+async function analyzeTopicWithAI(topGenre, text, results) {
+  const container = document.getElementById('analysisResult');
+  const audience = generateAudience(topGenre.genre);
+
+  // Show loading state
+  container.innerHTML = `
+    <div class="ai-loading">
+      <div class="ai-spinner"></div>
+      <div class="ai-loading-text">AI 正在生成故事大纲、角色设定和冲突点<span class="dots"></span></div>
+    </div>
+  `;
+
+  // Build prompts
+  const outlinePrompt = `你是一位专业的短剧编剧。请根据以下故事创意，生成一个200字以内的故事大纲。题材：${topGenre.genre}。故事创意：${text}。要求：结构完整（起承转合），语言精炼。`;
+  const characterPrompt = `你是一位专业的短剧编剧。请根据以下故事创意，提取3-5个核心角色。题材：${topGenre.genre}。故事创意：${text}。要求：每个角色包含姓名、身份、性格特点、在故事中的作用。以JSON数组格式返回：[{"name":"","role":"","desc":""}]`;
+  const conflictPrompt = `你是一位专业的短剧编剧。请根据以下故事创意，设计3-4个核心冲突点。题材：${topGenre.genre}。故事创意：${text}。要求：每个冲突包含标题和描述。以JSON数组格式返回：[{"title":"","desc":""}]`;
+
+  let outline = '', characters = [], conflicts = [];
+  let aiOutlineFailed = false, aiCharFailed = false, aiConflictFailed = false;
+
+  // Parallel API calls
+  try {
+    const [outlineResult, charResult, conflictResult] = await Promise.allSettled([
+      callLLM(outlinePrompt),
+      callLLM(characterPrompt),
+      callLLM(conflictPrompt)
+    ]);
+
+    // Process outline
+    if (outlineResult.status === 'fulfilled') {
+      outline = outlineResult.value;
+    } else {
+      aiOutlineFailed = true;
+      outline = generateOutline(topGenre.genre, text);
+    }
+
+    // Process characters
+    if (charResult.status === 'fulfilled') {
+      try {
+        const cleaned = charResult.value.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        characters = JSON.parse(cleaned);
+        if (!Array.isArray(characters)) throw new Error('not array');
+      } catch (e) {
+        aiCharFailed = true;
+        characters = generateCharacters(topGenre.genre, text);
+      }
+    } else {
+      aiCharFailed = true;
+      characters = generateCharacters(topGenre.genre, text);
+    }
+
+    // Process conflicts
+    if (conflictResult.status === 'fulfilled') {
+      try {
+        const cleaned = conflictResult.value.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        conflicts = JSON.parse(cleaned);
+        if (!Array.isArray(conflicts)) throw new Error('not array');
+      } catch (e) {
+        aiConflictFailed = true;
+        conflicts = generateConflicts(topGenre.genre, text);
+      }
+    } else {
+      aiConflictFailed = true;
+      conflicts = generateConflicts(topGenre.genre, text);
+    }
+
+    // Show warnings if any AI call failed
+    const failedParts = [];
+    if (aiOutlineFailed) failedParts.push('大纲');
+    if (aiCharFailed) failedParts.push('角色');
+    if (aiConflictFailed) failedParts.push('冲突');
+    if (failedParts.length > 0) {
+      showToast(`${failedParts.join('、')}生成失败，已使用本地模板作为替代`, 'warning');
+    }
+
+  } catch (e) {
+    showToast('AI 生成出错：' + e.message + '，已切换到本地模板', 'error');
+    outline = generateOutline(topGenre.genre, text);
+    characters = generateCharacters(topGenre.genre, text);
+    conflicts = generateConflicts(topGenre.genre, text);
+  }
+
+  // Render result
+  renderAnalysisResult(container, topGenre, results, outline, characters, conflicts, audience);
+}
+
+function analyzeTopicLocal(topGenre, text, results) {
   const outline = generateOutline(topGenre.genre, text);
   const characters = generateCharacters(topGenre.genre, text);
   const conflicts = generateConflicts(topGenre.genre, text);
   const audience = generateAudience(topGenre.genre);
-
-  // Render result
   const container = document.getElementById('analysisResult');
+  renderAnalysisResult(container, topGenre, results, outline, characters, conflicts, audience);
+}
+
+function renderAnalysisResult(container, topGenre, results, outline, characters, conflicts, audience) {
   container.innerHTML = `
     <div class="result-card animate-in">
       <div class="result-header open" onclick="this.classList.toggle('open')">
@@ -1514,6 +1771,7 @@ function generateAssets() {
 
   state.assetResult = { assets, visualStyle: vs, audioStyle: as };
 
+  const hasApiKey = !!state.apiKey;
   const container = document.getElementById('assetResult');
   container.innerHTML = `
     <div class="result-card animate-in">
@@ -1545,7 +1803,7 @@ function generateAssets() {
       <div class="result-body" style="display:block">
         <div style="overflow-x:auto">
           <table class="data-table">
-            <thead><tr><th>镜头</th><th>幕</th><th>时长</th><th>画面描述</th><th>视觉提示词</th><th>音频提示词</th><th>情绪</th></tr></thead>
+            <thead><tr><th>镜头</th><th>幕</th><th>时长</th><th>画面描述</th><th>视觉提示词</th><th>音频提示词</th><th>情绪</th>${hasApiKey ? '<th>操作</th>' : ''}</tr></thead>
             <tbody>
               ${assets.map(a => `
                 <tr>
@@ -1556,14 +1814,218 @@ function generateAssets() {
                   <td style="max-width:200px;font-size:.78rem">${a.visualPrompt}</td>
                   <td style="max-width:150px;font-size:.78rem">${a.audioPrompt}</td>
                   <td><span class="badge ${a.act===3?'badge-red':a.act===1?'badge-green':'badge-yellow'}">${a.mood}</span></td>
+                  ${hasApiKey ? `<td><button class="btn-video" onclick="handleGenerateVideo(${a.num})" id="videoBtn${a.num}">🎬 生成视频</button></td>` : ''}
                 </tr>
               `).join('')}
             </tbody>
           </table>
         </div>
+        ${hasApiKey ? `
+        <div id="videoTasksContainer" style="margin-top:16px"></div>
+        ` : `
+        <div style="margin-top:12px;padding:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius);font-size:.82rem;color:var(--warning)">
+          💡 配置 API Key 后可在此处直接生成视频素材。前往 <a href="javascript:void(0)" onclick="switchView('apiconfig')" style="color:var(--accent-light);text-decoration:underline">API配置</a> 进行设置。
+        </div>
+        `}
       </div>
     </div>
   `;
+}
+
+async function handleGenerateVideo(shotNum) {
+  if (!state.apiKey) {
+    showToast('请先配置 API Key', 'warning');
+    return;
+  }
+  if (!state.assetResult) return;
+
+  const asset = state.assetResult.assets.find(a => a.num === shotNum);
+  if (!asset) return;
+
+  const btn = document.getElementById('videoBtn' + shotNum);
+  if (!btn || btn.disabled) return;
+
+  btn.disabled = true;
+  btn.classList.add('generating');
+  btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> 提交中...';
+
+  try {
+    const result = await createVideoTask(asset.visualPrompt);
+    const taskId = result.id || result.task_id || '';
+    state.videoTasks[shotNum] = { taskId, status: 'queued', videoUrl: '' };
+
+    btn.innerHTML = '🔄 查询状态';
+    btn.disabled = false;
+    btn.classList.remove('generating');
+    btn.onclick = () => pollVideoTask(shotNum);
+
+    renderVideoTaskInfo(shotNum);
+    showToast('视频生成任务已提交：' + taskId, 'success');
+  } catch (e) {
+    btn.disabled = false;
+    btn.classList.remove('generating');
+    btn.innerHTML = '🎬 生成视频';
+    showToast('视频生成失败：' + e.message, 'error');
+  }
+}
+
+async function pollVideoTask(shotNum) {
+  const task = state.videoTasks[shotNum];
+  if (!task || !task.taskId) return;
+
+  const btn = document.getElementById('videoBtn' + shotNum);
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> 查询中...';
+  }
+
+  try {
+    const result = await queryVideoTask(task.taskId);
+    const status = result.status || 'unknown';
+    task.status = status;
+
+    if (status === 'succeeded' && result.content) {
+      task.videoUrl = result.content.video_url || '';
+      if (btn) {
+        btn.innerHTML = '✅ 已完成';
+        btn.disabled = true;
+      }
+      showToast('镜头 #' + shotNum + ' 视频生成完成！', 'success');
+    } else if (status === 'failed') {
+      if (btn) {
+        btn.innerHTML = '❌ 失败';
+        btn.disabled = false;
+        btn.onclick = () => handleGenerateVideo(shotNum);
+      }
+      showToast('镜头 #' + shotNum + ' 视频生成失败', 'error');
+    } else {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '🔄 查询状态';
+        btn.onclick = () => pollVideoTask(shotNum);
+      }
+      showToast('镜头 #' + shotNum + ' 状态：' + status, 'info');
+    }
+
+    renderVideoTaskInfo(shotNum);
+  } catch (e) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '🔄 查询状态';
+    }
+    showToast('查询失败：' + e.message, 'error');
+  }
+}
+
+function renderVideoTaskInfo(shotNum) {
+  const task = state.videoTasks[shotNum];
+  if (!task) return;
+
+  let container = document.getElementById('videoTasksContainer');
+  if (!container) return;
+
+  let taskEl = document.getElementById('videoTaskEl' + shotNum);
+  const statusLabel = { queued: '排队中', running: '生成中', succeeded: '已完成', failed: '失败' };
+  const statusClass = task.status || 'queued';
+
+  const html = `
+    <div class="video-task-info">
+      <span style="font-weight:600;color:var(--text-primary)">镜头 #${shotNum}</span>
+      <span class="task-id">ID: ${task.taskId}</span>
+      <span class="task-status ${statusClass}">${statusLabel[task.status] || task.status}</span>
+    </div>
+    ${task.videoUrl ? `
+    <div class="video-player-wrap">
+      <video controls playsinline preload="metadata" src="${task.videoUrl}"></video>
+    </div>
+    ` : ''}
+  `;
+
+  if (taskEl) {
+    taskEl.innerHTML = html;
+  } else {
+    taskEl = document.createElement('div');
+    taskEl.id = 'videoTaskEl' + shotNum;
+    taskEl.innerHTML = html;
+    container.appendChild(taskEl);
+  }
+}
+
+async function handleGenerateTTS() {
+  const textInput = document.getElementById('ttsTextInput');
+  const voiceSelect = document.getElementById('ttsVoiceSelect');
+  const resultContainer = document.getElementById('ttsResultContainer');
+  const btn = document.getElementById('ttsGenerateBtn');
+
+  if (!textInput || !voiceSelect || !resultContainer || !btn) return;
+
+  const text = textInput.value.trim();
+  if (!text) {
+    showToast('请输入旁白文本', 'warning');
+    return;
+  }
+
+  if (!state.apiKey || !state.ttsEndpoint) {
+    showToast('请先配置语音合成服务', 'warning');
+    return;
+  }
+
+  const voice = voiceSelect.value;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px"></span> 正在合成...';
+
+  resultContainer.innerHTML = `
+    <div class="ai-loading">
+      <div class="ai-spinner"></div>
+      <div class="ai-loading-text">语音合成中，请稍候<span class="dots"></span></div>
+    </div>
+  `;
+
+  try {
+    const result = await callTTS(text, voice);
+    // Try to extract audio URL from response
+    let audioUrl = '';
+    if (result.choices && result.choices[0] && result.choices[0].message) {
+      // If TTS returns text response, show it
+      const msg = result.choices[0].message.content;
+      resultContainer.innerHTML = `
+        <div class="audio-player-wrap">
+          <div class="audio-label">TTS 响应（文本模式）</div>
+          <p style="font-size:.85rem;color:var(--text-secondary);margin:8px 0">${msg}</p>
+          <div style="font-size:.78rem;color:var(--text-muted);margin-top:8px">
+            提示：当前 TTS Endpoint 返回文本格式。如需音频输出，请确认 Endpoint 配置为语音合成模式。
+          </div>
+        </div>
+      `;
+    } else if (result.content && result.content.audio_url) {
+      audioUrl = result.content.audio_url;
+      resultContainer.innerHTML = `
+        <div class="audio-player-wrap">
+          <div class="audio-label">旁白音频（${voiceSelect.options[voiceSelect.selectedIndex].text}）</div>
+          <audio controls preload="metadata" src="${audioUrl}"></audio>
+        </div>
+      `;
+    } else {
+      resultContainer.innerHTML = `
+        <div class="audio-player-wrap">
+          <div class="audio-label">TTS 响应</div>
+          <p style="font-size:.85rem;color:var(--text-secondary);margin:8px 0">语音合成请求已完成，但返回格式需要确认。请检查 TTS Endpoint 配置。</p>
+          <div style="font-size:.78rem;color:var(--text-muted);margin-top:8px;white-space:pre-wrap">${JSON.stringify(result, null, 2).substring(0, 500)}</div>
+        </div>
+      `;
+    }
+    showToast('语音合成完成', 'success');
+  } catch (e) {
+    resultContainer.innerHTML = `
+      <div style="padding:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius);font-size:.82rem;color:var(--error)">
+        语音合成失败：${e.message}
+      </div>
+    `;
+    showToast('语音合成失败：' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>🎙️</span> 生成旁白';
 }
 
 // ============================================================
@@ -1693,6 +2155,39 @@ function generateEditPlan() {
         <div class="srt-preview">${escapeHtml(srtContent)}</div>
       </div>
     </div>` : ''}
+
+    ${state.ttsEndpoint ? `
+    <div class="tts-section animate-in">
+      <div class="card-title">🔊 语音合成（旁白生成）</div>
+      <div class="tts-notice hidden" id="ttsNotice"></div>
+      <div class="form-group">
+        <label>旁白文本</label>
+        <textarea id="ttsTextInput" placeholder="输入需要合成的旁白文本..." rows="4">${state.storyText ? state.storyText.substring(0, 200) : ''}</textarea>
+      </div>
+      <div class="form-group">
+        <label>音色选择</label>
+        <select id="ttsVoiceSelect">
+          <option value="male1">男声1 - 浑厚磁性</option>
+          <option value="female1">女声1 - 温柔知性</option>
+          <option value="male2">男声2 - 清朗年轻</option>
+          <option value="female2">女声2 - 活泼甜美</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="ttsGenerateBtn" onclick="handleGenerateTTS()">
+          <span>🎙️</span> 生成旁白
+        </button>
+      </div>
+      <div id="ttsResultContainer"></div>
+    </div>
+    ` : `
+    <div class="tts-section animate-in">
+      <div class="card-title">🔊 语音合成</div>
+      <div class="tts-notice">
+        ⚠️ 请在 <a href="javascript:void(0)" onclick="switchView('apiconfig')" style="color:var(--accent-light);text-decoration:underline">API配置</a> 中设置语音合成服务（TTS Endpoint ID）后，即可在此处生成旁白语音。
+      </div>
+    </div>
+    `}
   `;
   // Auto-advance to step 5 after generating edit plan
   setTimeout(() => goToStep(5), 300);
@@ -1991,9 +2486,213 @@ function renderStyleConfig() {
 }
 
 // ============================================================
+// API CONFIG MANAGEMENT
+// ============================================================
+function loadApiConfig() {
+  state.apiKey = localStorage.getItem('manju_apiKey') || '';
+  state.textModelEndpoint = localStorage.getItem('manju_textModelEndpoint') || 'doubao-seed-1-6-251015';
+  state.videoModelEndpoint = localStorage.getItem('manju_videoModelEndpoint') || 'doubao-seedance-1-0-pro-250528';
+  state.ttsEndpoint = localStorage.getItem('manju_ttsEndpoint') || '';
+  // Populate UI fields
+  document.getElementById('apiKeyInput').value = state.apiKey;
+  document.getElementById('textModelEndpoint').value = state.textModelEndpoint;
+  document.getElementById('videoModelEndpoint').value = state.videoModelEndpoint;
+  document.getElementById('ttsEndpoint').value = state.ttsEndpoint;
+  updateApiStatusBadge();
+}
+
+function saveApiConfig() {
+  state.apiKey = document.getElementById('apiKeyInput').value.trim();
+  state.textModelEndpoint = document.getElementById('textModelEndpoint').value.trim();
+  state.videoModelEndpoint = document.getElementById('videoModelEndpoint').value;
+  state.ttsEndpoint = document.getElementById('ttsEndpoint').value.trim();
+  localStorage.setItem('manju_apiKey', state.apiKey);
+  localStorage.setItem('manju_textModelEndpoint', state.textModelEndpoint);
+  localStorage.setItem('manju_videoModelEndpoint', state.videoModelEndpoint);
+  localStorage.setItem('manju_ttsEndpoint', state.ttsEndpoint);
+  updateApiStatusBadge();
+  showToast('配置已保存', 'success');
+}
+
+function clearApiConfig() {
+  if (!confirm('确定要清除所有 API 配置吗？')) return;
+  localStorage.removeItem('manju_apiKey');
+  localStorage.removeItem('manju_textModelEndpoint');
+  localStorage.removeItem('manju_videoModelEndpoint');
+  localStorage.removeItem('manju_ttsEndpoint');
+  state.apiKey = '';
+  state.textModelEndpoint = 'doubao-seed-1-6-251015';
+  state.videoModelEndpoint = 'doubao-seedance-1-0-pro-250528';
+  state.ttsEndpoint = '';
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('textModelEndpoint').value = state.textModelEndpoint;
+  document.getElementById('videoModelEndpoint').value = state.videoModelEndpoint;
+  document.getElementById('ttsEndpoint').value = '';
+  updateApiStatusBadge();
+  showToast('配置已清除', 'info');
+}
+
+function updateApiStatusBadge() {
+  const badge = document.getElementById('apiStatusBadge');
+  if (!badge) return;
+  if (state.apiKey) {
+    badge.className = 'api-status connected';
+    badge.innerHTML = '<span class="status-dot"></span>已配置';
+  } else {
+    badge.className = 'api-status disconnected';
+    badge.innerHTML = '<span class="status-dot"></span>未连接';
+  }
+}
+
+function toggleApiKeyVisibility() {
+  const input = document.getElementById('apiKeyInput');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+async function testApiConnection() {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (!apiKey) {
+    showToast('请先输入 API Key', 'warning');
+    return;
+  }
+  const endpoint = document.getElementById('textModelEndpoint').value.trim() || 'doubao-seed-1-6-251015';
+  try {
+    showToast('正在测试连接...', 'info');
+    const resp = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: endpoint,
+        messages: [{ role: 'user', content: '你好，请回复"连接成功"' }]
+      })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.choices && data.choices.length > 0) {
+        showToast('连接成功！模型响应：' + data.choices[0].message.content.substring(0, 50), 'success');
+      } else {
+        showToast('连接成功，但响应格式异常', 'warning');
+      }
+    } else {
+      const errData = await resp.json().catch(() => ({}));
+      showToast('连接失败：' + (errData.error?.message || resp.status + ' ' + resp.statusText), 'error');
+    }
+  } catch (e) {
+    showToast('网络错误：' + e.message, 'error');
+  }
+}
+
+// ============================================================
+// AI API CALLS
+// ============================================================
+async function callLLM(prompt) {
+  if (!state.apiKey) throw new Error('未配置 API Key');
+  const endpoint = state.textModelEndpoint || 'doubao-seed-1-6-251015';
+  const resp = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + state.apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: endpoint,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!resp.ok) {
+    const errData = await resp.json().catch(() => ({}));
+    throw new Error(errData.error?.message || 'API请求失败: ' + resp.status);
+  }
+  const data = await resp.json();
+  if (!data.choices || data.choices.length === 0) throw new Error('API返回空结果');
+  return data.choices[0].message.content;
+}
+
+async function createVideoTask(prompt) {
+  if (!state.apiKey) throw new Error('未配置 API Key');
+  const model = state.videoModelEndpoint || 'doubao-seedance-1-0-pro-250528';
+  const resp = await fetch('https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + state.apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model,
+      content: [
+        { type: 'text', text: prompt + ' --ratio 9:16 --dur 5 --rs 720p' }
+      ]
+    })
+  });
+  if (!resp.ok) {
+    const errData = await resp.json().catch(() => ({}));
+    throw new Error(errData.error?.message || '视频生成任务创建失败: ' + resp.status);
+  }
+  const data = await resp.json();
+  return data;
+}
+
+async function queryVideoTask(taskId) {
+  if (!state.apiKey) throw new Error('未配置 API Key');
+  const resp = await fetch('https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks/' + taskId, {
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + state.apiKey
+    }
+  });
+  if (!resp.ok) {
+    const errData = await resp.json().catch(() => ({}));
+    throw new Error(errData.error?.message || '任务查询失败: ' + resp.status);
+  }
+  const data = await resp.json();
+  return data;
+}
+
+async function callTTS(text, voice) {
+  if (!state.apiKey || !state.ttsEndpoint) throw new Error('未配置语音合成服务');
+  const resp = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + state.apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: state.ttsEndpoint,
+      messages: [{ role: 'user', content: text }]
+    })
+  });
+  if (!resp.ok) {
+    const errData = await resp.json().catch(() => ({}));
+    throw new Error(errData.error?.message || '语音合成失败: ' + resp.status);
+  }
+  const data = await resp.json();
+  return data;
+}
+
+// ============================================================
+// TOAST NOTIFICATION
+// ============================================================
+function showToast(message, type) {
+  type = type || 'info';
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toastOut .3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  loadApiConfig();
   updateStepUI();
 });
 </script>
